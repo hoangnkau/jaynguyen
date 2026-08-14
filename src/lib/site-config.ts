@@ -35,11 +35,20 @@ export interface Capability {
   icon: "hardware" | "network" | "security" | "finance";
 }
 
+/**
+ * The canonical origin. Set NEXT_PUBLIC_SERVER_URL in Vercel; falls back to the
+ * real domain locally. `isLiveDomain` drives the robots policy below — while the
+ * site is on a *.vercel.app preview URL it stays out of Google entirely, so the
+ * temporary URL can never rank against jaynguyen.fyi and split its authority.
+ */
+const url = process.env.NEXT_PUBLIC_SERVER_URL ?? "https://jaynguyen.fyi";
+export const isLiveDomain = url === "https://jaynguyen.fyi";
+
 export const site = {
   name: "Jay Nguyen",
   legalName: "Khanh Hoang (Jay) Nguyen",
   domain: "jaynguyen.fyi",
-  url: "https://jaynguyen.fyi",
+  url,
   location: "Darwin, NT, Australia",
   email: "hoangnk.au@gmail.com",
   title: "Jay Nguyen — IT Systems & Cyber Security | Darwin, NT",
@@ -62,7 +71,7 @@ export const site = {
     { label: "Projects", href: "/projects" },
     { label: "Contact", href: "/contact" },
   ],
-} as const;
+};
 
 export const hero = {
   heading: "Jay Nguyen",
