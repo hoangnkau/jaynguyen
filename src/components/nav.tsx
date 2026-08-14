@@ -28,7 +28,7 @@ export function Nav() {
       }`}
     >
       <div className="mx-auto flex w-full max-w-[var(--container-content)] items-center gap-6 px-6 py-4">
-        <Link href="/" className="mr-auto flex items-center gap-2.5 text-base font-semibold">
+        <Link href="/" className="-my-1 mr-auto flex items-center gap-2.5 py-3 text-base font-semibold">
           <span className="size-2 shrink-0 rounded-full bg-accent" />
           {site.domain}
         </Link>
@@ -38,14 +38,14 @@ export function Nav() {
             <Link
               key={link.href}
               href={link.href}
-              className="hidden text-[14.5px] font-medium text-muted transition-colors hover:text-fg sm:block"
+              className="hidden py-3 text-[14.5px] font-medium text-muted transition-colors hover:text-fg sm:block"
             >
               {link.label}
             </Link>
           ))}
           <Link
             href="/cv"
-            className="rounded-lg bg-accent px-4 py-2 text-sm font-semibold text-on-accent transition-opacity hover:opacity-88"
+            className="rounded-lg bg-accent px-4 py-2.5 text-sm font-semibold text-on-accent transition-opacity hover:opacity-88"
           >
             Download CV
           </Link>

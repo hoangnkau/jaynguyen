@@ -17,7 +17,7 @@ export function ThemeToggle() {
       type="button"
       onClick={() => setTheme(resolvedTheme === "dark" ? "light" : "dark")}
       aria-label="Toggle between light and dark theme"
-      className="grid size-9 place-items-center rounded-lg border border-border text-muted transition-colors hover:border-fg hover:text-fg"
+      className="grid size-11 place-items-center rounded-lg border border-border text-muted transition-colors hover:border-fg hover:text-fg"
     >
       <Sun className="size-4 dark:hidden" />
       <Moon className="hidden size-4 dark:block" />

@@ -6,6 +6,24 @@
 /* ---------------------------------------------------------------
    Design tokens — the single source of truth for the whole site.
    Locked in the blueprint: light default, Territory ochre accent.
+
+   Every foreground/background pair below is validated at WCAG AA
+   (>= 4.5:1 for normal text). Ratios measured, not assumed:
+
+     LIGHT                                  DARK
+     body on bg          16.96              15.68
+     muted on bg          7.40               7.28
+     muted on surface-2   7.03               5.99
+     accent on bg         5.14               6.75
+     accent on surface    5.37               6.10
+     label on accent      5.37               6.60
+     badge accent/soft    4.53               5.14
+     badge live/soft      5.51               5.54
+
+   The accent differs per theme on purpose: a single ochre cannot
+   carry white text AND sit on a near-white page at AA. Light mode
+   uses the deeper #B8451F; dark mode uses the lighter #F0784F with
+   near-black label text.
    --------------------------------------------------------------- */
 :root {
   --bg: #fafaf9;
@@ -14,10 +32,10 @@
   --fg: #18181b;
   --muted: #52525b;
   --border: #e4e4e7;
-  --accent: #e8663d;
-  --accent-soft: rgb(232 102 61 / 0.1);
-  --live: #16a34a;
-  --live-soft: rgb(22 163 74 / 0.12);
+  --accent: #b8451f;
+  --accent-soft: rgb(184 69 31 / 0.12);
+  --live: #146b34;
+  --live-soft: rgb(20 107 52 / 0.12);
   --on-accent: #ffffff;
 }
 
@@ -28,11 +46,11 @@
   --fg: #e8eaed;
   --muted: #9ba1ac;
   --border: #2a3441;
-  --accent: #e8663d;
-  --accent-soft: rgb(232 102 61 / 0.14);
+  --accent: #f0784f;
+  --accent-soft: rgb(240 120 79 / 0.14);
   --live: #3fb950;
   --live-soft: rgb(63 185 80 / 0.14);
-  --on-accent: #ffffff;
+  --on-accent: #1b1207;
 }
 
 @theme inline {
