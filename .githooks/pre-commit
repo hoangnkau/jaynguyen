@@ -1,0 +1,20 @@
+#!/bin/sh
+# GUARDRAIL (blueprint §8.2): no secret ever reaches the repo.
+# Enable once with:  git config core.hooksPath .githooks
+#
+# Install gitleaks:  https://github.com/gitleaks/gitleaks/releases
+# If gitleaks is not installed the hook fails loudly rather than passing
+# silently — a scanner you think is running but isn't is worse than none.
+
+if ! command -v gitleaks >/dev/null 2>&1; then
+  echo "✖ gitleaks is not installed. Install it, or commit with --no-verify"
+  echo "  and understand that nothing scanned this change."
+  exit 1
+fi
+
+gitleaks protect --staged --redact --verbose || {
+  echo ""
+  echo "✖ A potential secret was found in the staged changes."
+  echo "  If it was ever pushed, ROTATE the key — deleting the commit is not enough."
+  exit 1
+}
