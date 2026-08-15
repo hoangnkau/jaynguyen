@@ -16,10 +16,22 @@ export default async function CVPage() {
   return (
     <Page>
       <div className="flex flex-wrap items-end justify-between gap-4 print:block">
+        {/*
+          * No fallback for the lead.
+          *
+          * It used to read `cv.headline ?? location · email`, from before the
+          * contact line below existed. With both in place an empty headline
+          * printed the same two facts twice, three lines apart — which looks
+          * exactly like a rendering bug, because it is one.
+          *
+          * An absent headline should leave a gap. The health panel already
+          * reports a CV with no stated position; papering over it here would
+          * hide the thing that check exists to surface.
+          */}
         <PageHeader
           eyebrow="Curriculum vitae"
           title={s.legalName}
-          lead={cv.headline ?? `${s.location} · ${s.email}`}
+          lead={cv.headline || undefined}
         />
         {file?.url && (
           <Link
