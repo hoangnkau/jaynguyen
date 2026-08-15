@@ -95,6 +95,37 @@ const nextConfig: NextConfig = {
       { protocol: "https", hostname: "*.public.blob.vercel-storage.com" },
     ],
   },
+  /**
+   * www is not this site. Anything reaching it is sent to the apex, once, with
+   * a 308.
+   *
+   * This is not tidiness. The admin session cookie is set without a `domain`
+   * attribute — deliberately, because scoping it to `.jaynguyen.fyi` would
+   * hand it to every present and future subdomain. A host-only cookie set on
+   * jaynguyen.fyi is simply not sent to www.jaynguyen.fyi, so on www every
+   * request arrives unauthenticated: pages still render (public reads are
+   * public), and every write fails with "You are not allowed to perform this
+   * action". The passkey ceremony fails there too, because expectedOrigin and
+   * expectedRPID come from NEXT_PUBLIC_SERVER_URL, which is the apex.
+   *
+   * That failure is horrible to diagnose from the inside — the admin looks
+   * logged in, and only saving tells you otherwise. Redirecting at the edge
+   * means the www host cannot get far enough to produce it.
+   *
+   * It also settles the SEO question: without this, both hosts serve the whole
+   * site and Google has to guess which one is canonical.
+   */
+  async redirects() {
+    return [
+      {
+        source: "/:path*",
+        has: [{ type: "host", value: "www.jaynguyen.fyi" }],
+        destination: "https://jaynguyen.fyi/:path*",
+        permanent: true,
+      },
+    ];
+  },
+
   async headers() {
     return [
       {
