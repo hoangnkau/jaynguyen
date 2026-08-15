@@ -108,6 +108,17 @@ export const getPosts = cache(async (): Promise<Post[]> => {
   return res.docs;
 });
 
+export const getPost = cache(async (slug: string): Promise<Post | null> => {
+  const res = await (await client()).find({
+    collection: "posts",
+    depth: 2,
+    limit: 1,
+    where: { slug: { equals: slug } },
+    ...PUBLIC,
+  });
+  return res.docs[0] ?? null;
+});
+
 /**
  * GUARDRAIL (blueprint §8.2): the blog does not exist publicly until three
  * posts do. Nav and home section both key off this. An empty blog is worse

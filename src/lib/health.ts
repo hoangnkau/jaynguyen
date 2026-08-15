@@ -68,7 +68,7 @@ export async function collectHealthRows(): Promise<Row[]> {
   // judges is what a visitor actually gets — not what the database holds.
   const PUBLIC = { overrideAccess: false } as const;
 
-  const [settings, home, about, cv, projects, posts, media, passkeys, users] =
+  const [settings, home, about, cv, projects, posts, media, passkeys, users, messages] =
     await Promise.all([
       payload.findGlobal({ slug: "site-settings", depth: 0 }),
       payload.findGlobal({ slug: "home", depth: 2, ...PUBLIC }),
@@ -85,6 +85,13 @@ export async function collectHealthRows(): Promise<Row[]> {
       payload.find({ collection: "media", limit: 500, depth: 0, overrideAccess: true }),
       payload.count({ collection: "passkeys", overrideAccess: true }),
       payload.find({ collection: "users", limit: 10, depth: 0, overrideAccess: true }),
+      payload.find({
+        collection: "messages",
+        limit: 200,
+        depth: 0,
+        sort: "-createdAt",
+        overrideAccess: true,
+      }),
     ]);
 
   const rows: Row[] = [];
@@ -210,6 +217,24 @@ export async function collectHealthRows(): Promise<Row[]> {
       : `CV stamped ${new Date(cvUpdated).toLocaleDateString("en-AU")}.`,
   });
 
+  /**
+   * The CV's argument, not just its dates.
+   *
+   * The blueprint's §1b item 3 — reposition the CV around the MSc rather than
+   * the accounting degree — is the kind of task that is done once and then
+   * quietly undone by an edit. A headline and summary present is a weak proxy
+   * for "the argument is still there", but it is a proxy that survives.
+   */
+  const cvCopy = cv as { headline?: string | null; summary?: string | null };
+  const hasArgument = Boolean(cvCopy.headline?.trim() && cvCopy.summary?.trim());
+  rows.push({
+    label: "CV states a position",
+    ok: hasArgument,
+    detail: hasArgument
+      ? "Headline and summary are both set."
+      : "No headline or summary on /cv. Without one the page is a list of dates and the reader draws their own conclusion — usually the wrong one.",
+  });
+
   const currentlyAt = parseMonthYear(
     (home as { currentlyUpdated?: string | null }).currentlyUpdated,
   );
@@ -252,6 +277,48 @@ export async function collectHealthRows(): Promise<Row[]> {
       noAlt.length === 0
         ? `${media.totalDocs} files, all described.`
         : `${noAlt.length} without alt text.`,
+  });
+
+  /* ------------------------------------------------------ contact form -- */
+
+  /**
+   * Two questions about the form, and they fail in opposite directions.
+   *
+   * The first is whether anything is waiting on a reply — a portfolio that
+   * invites contact and then does not answer is worse than one that does not
+   * invite it. The second is whether the notification path is actually
+   * working, which is the failure Messages.ts was designed to make visible:
+   * without this row, a broken RESEND_API_KEY looks exactly like nobody having
+   * written to you.
+   */
+  type Msg = { handled?: boolean; deliveredByEmail?: boolean; createdAt?: string };
+  const msgs = messages.docs as Msg[];
+
+  const waiting = msgs.filter((m) => !m.handled);
+  const oldestWaitingDays = waiting.length
+    ? Math.max(...waiting.map((m) => daysSince(m.createdAt) ?? 0))
+    : null;
+  rows.push({
+    label: "Messages answered",
+    ok: oldestWaitingDays === null || oldestWaitingDays <= 3,
+    detail:
+      oldestWaitingDays === null
+        ? `Nothing waiting${messages.totalDocs ? ` — ${messages.totalDocs} received in total` : ""}.`
+        : oldestWaitingDays <= 3
+          ? `${waiting.length} unanswered, the oldest ${oldestWaitingDays} day(s) old.`
+          : `${waiting.length} unanswered, the oldest ${oldestWaitingDays} days old. /contact promises an answer within a day.`,
+  });
+
+  const undelivered = msgs.filter((m) => !m.deliveredByEmail);
+  rows.push({
+    label: "Contact form email delivery",
+    ok: undelivered.length === 0,
+    detail:
+      undelivered.length === 0
+        ? messages.totalDocs
+          ? "Every stored message was also emailed."
+          : "No messages yet, so nothing to deliver."
+        : `${undelivered.length} message(s) stored but never emailed — open one and read its delivery error. Usually RESEND_API_KEY or CONTACT_FROM_EMAIL in Vercel, or a sending domain that has fallen out of verification.`,
   });
 
   /* --------------------------------------------------------- operations -- */

@@ -71,6 +71,7 @@ export interface Config {
     posts: Post;
     tags: Tag;
     media: Media;
+    messages: Message;
     users: User;
     passkeys: Passkey;
     'payload-kv': PayloadKv;
@@ -84,6 +85,7 @@ export interface Config {
     posts: PostsSelect<false> | PostsSelect<true>;
     tags: TagsSelect<false> | TagsSelect<true>;
     media: MediaSelect<false> | MediaSelect<true>;
+    messages: MessagesSelect<false> | MessagesSelect<true>;
     users: UsersSelect<false> | UsersSelect<true>;
     passkeys: PasskeysSelect<false> | PasskeysSelect<true>;
     'payload-kv': PayloadKvSelect<false> | PayloadKvSelect<true>;
@@ -356,6 +358,32 @@ export interface Post {
   _status?: ('draft' | 'published') | null;
 }
 /**
+ * Contact form submissions. Recorded here first, emailed second — so a mail outage loses a notification, never a message.
+ *
+ * This interface was referenced by `Config`'s JSON-Schema
+ * via the `definition` "messages".
+ */
+export interface Message {
+  id: number;
+  name: string;
+  email: string;
+  message: string;
+  /**
+   * Tick when you have answered. Nothing on the public site reads this.
+   */
+  handled?: boolean | null;
+  /**
+   * Set by the server action. If this is off, the message reached the database but never reached your inbox.
+   */
+  deliveredByEmail?: boolean | null;
+  /**
+   * Whatever the mail provider said. Kept verbatim — a paraphrased error is a lost error.
+   */
+  deliveryError?: string | null;
+  updatedAt: string;
+  createdAt: string;
+}
+/**
  * This interface was referenced by `Config`'s JSON-Schema
  * via the `definition` "users".
  */
@@ -437,6 +465,10 @@ export interface PayloadLockedDocument {
     | ({
         relationTo: 'media';
         value: number | Media;
+      } | null)
+    | ({
+        relationTo: 'messages';
+        value: number | Message;
       } | null)
     | ({
         relationTo: 'users';
@@ -601,6 +633,20 @@ export interface MediaSelect<T extends boolean = true> {
               filename?: T;
             };
       };
+}
+/**
+ * This interface was referenced by `Config`'s JSON-Schema
+ * via the `definition` "messages_select".
+ */
+export interface MessagesSelect<T extends boolean = true> {
+  name?: T;
+  email?: T;
+  message?: T;
+  handled?: T;
+  deliveredByEmail?: T;
+  deliveryError?: T;
+  updatedAt?: T;
+  createdAt?: T;
 }
 /**
  * This interface was referenced by `Config`'s JSON-Schema
@@ -795,6 +841,10 @@ export interface Home {
  */
 export interface About {
   id: number;
+  /**
+   * A single portrait, chest up, looking at the camera. Shown beside the bio. Leave empty rather than use a poor photo — nothing here reads as neutral, a bad photo reads as a signal.
+   */
+  portrait?: (number | null) | Media;
   bio: {
     root: {
       type: string;
@@ -854,6 +904,14 @@ export interface About {
  */
 export interface Cv {
   id: number;
+  /**
+   * One line under your name, e.g. 'Infrastructure & systems engineer moving into cyber security'. Job titles describe where you have been; this says what you are for.
+   */
+  headline?: string | null;
+  /**
+   * Three or four sentences, first person. Lead with the thing that is hardest for someone else to claim.
+   */
+  summary?: string | null;
   file?: (number | null) | Media;
   /**
    * The admin health panel flags this when it falls behind the rest of the site. A CV that disagrees with the site is worse than no CV.
@@ -952,6 +1010,7 @@ export interface HomeSelect<T extends boolean = true> {
  * via the `definition` "about_select".
  */
 export interface AboutSelect<T extends boolean = true> {
+  portrait?: T;
   bio?: T;
   timeline?:
     | T
@@ -994,6 +1053,8 @@ export interface AboutSelect<T extends boolean = true> {
  * via the `definition` "cv_select".
  */
 export interface CvSelect<T extends boolean = true> {
+  headline?: T;
+  summary?: T;
   file?: T;
   lastUpdated?: T;
   referencesNote?: T;

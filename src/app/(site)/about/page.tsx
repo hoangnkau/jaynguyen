@@ -1,9 +1,11 @@
 import type { Metadata } from "next";
+import Image from "next/image";
 import Link from "next/link";
 import { RichText } from "@/components/rich-text";
 import { Block, Page, PageHeader } from "@/components/ui";
+import { toImageSrc } from "@/lib/media-url";
 import { getAbout, getSiteSettings } from "@/lib/queries";
-import type { Project } from "@/payload-types";
+import type { Media, Project } from "@/payload-types";
 
 export async function generateMetadata(): Promise<Metadata> {
   const s = await getSiteSettings();
@@ -32,6 +34,20 @@ export default async function AboutPage() {
     (g) => typeof g.evidence === "object" && g.evidence !== null,
   );
 
+  /**
+   * An upload read with overrideAccess: false comes back as a full object when
+   * the file is publicly readable and as a bare ID when it is not — the same
+   * test the evidence filter above relies on. So this narrowing is not
+   * defensive typing, it is the access check.
+   */
+  const portrait =
+    typeof about.portrait === "object" && about.portrait !== null
+      ? (about.portrait as Media)
+      : null;
+
+  /** See lib/media-url — a local-disk upload arrives with an origin on it. */
+  const portraitSrc = toImageSrc(portrait?.url);
+
   return (
     <Page>
       <PageHeader
@@ -40,7 +56,39 @@ export default async function AboutPage() {
       />
 
       <Block>
-        <RichText data={about.bio} className="text-[17px] leading-[1.75] text-muted" />
+        {/*
+          * The portrait sits to the right of the bio on a wide screen and
+          * above it on a narrow one — `order-first` rather than a second copy
+          * of the markup, so there is exactly one <img> in the document and no
+          * chance of the two versions drifting apart.
+          */}
+        <div className="grid gap-10 lg:grid-cols-[minmax(0,1fr)_240px] lg:items-start lg:gap-14">
+          <RichText data={about.bio} className="text-[17px] leading-[1.75] text-muted" />
+
+          {portraitSrc && portrait && (
+            <figure className="order-first max-w-[240px] lg:order-none lg:sticky lg:top-28">
+              <Image
+                src={portraitSrc}
+                alt={portrait.alt}
+                width={portrait.width ?? 800}
+                height={portrait.height ?? 1000}
+                sizes="(min-width: 1024px) 240px, 240px"
+                className="w-full rounded-xl border border-border object-cover"
+                /*
+                 * Not priority. This is below the fold on every viewport the
+                 * layout was designed for, and marking a below-fold image as
+                 * priority does not make it arrive sooner — it makes the text
+                 * above it arrive later.
+                 */
+              />
+              {portrait.caption && (
+                <figcaption className="mt-2.5 text-[13px] text-muted">
+                  {portrait.caption}
+                </figcaption>
+              )}
+            </figure>
+          )}
+        </div>
       </Block>
 
       {!!about.timeline?.length && (

@@ -7,6 +7,31 @@ export const About: GlobalConfig = {
   access: { read: () => true, update: ({ req }) => Boolean(req.user) },
   hooks: { afterChange: [() => revalidateSite()] },
   fields: [
+    /**
+     * The portrait, and why it lives here rather than on the home page.
+     *
+     * A face belongs where the first-person writing is. In the hero it is a
+     * decoration competing with the one sentence that has to land; beside the
+     * bio it is doing the job a photograph actually does — turning a document
+     * into a person who wrote it. It is also below the fold, which is why the
+     * component does not mark it priority.
+     *
+     * Optional at the schema level. The site reads perfectly well without one,
+     * and a required field here would mean the page could not render until an
+     * image existed, which is backwards: the writing is the substance.
+     *
+     * Alt text is not optional — Media already refuses to save without it
+     * (blueprint §8.1), so there is no path by which this arrives undescribed.
+     */
+    {
+      name: "portrait",
+      type: "upload",
+      relationTo: "media",
+      admin: {
+        description:
+          "A single portrait, chest up, looking at the camera. Shown beside the bio. Leave empty rather than use a poor photo — nothing here reads as neutral, a bad photo reads as a signal.",
+      },
+    },
     { name: "bio", type: "richText", required: true },
     {
       name: "timeline",

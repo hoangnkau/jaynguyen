@@ -8,6 +8,7 @@ import sharp from "sharp";
 import { resolveServerUrl } from "./src/lib/server-url";
 
 import { Media } from "./src/collections/Media";
+import { Messages } from "./src/collections/Messages";
 import { Posts } from "./src/collections/Posts";
 import { Projects } from "./src/collections/Projects";
 import { Tags } from "./src/collections/Tags";
@@ -60,7 +61,7 @@ export default buildConfig({
   },
 
   editor: lexicalEditor(),
-  collections: [Projects, Posts, Tags, Media, Users, Passkeys],
+  collections: [Projects, Posts, Tags, Media, Messages, Users, Passkeys],
   globals: [SiteSettings, Home, About, CV],
 
   db: postgresAdapter({
