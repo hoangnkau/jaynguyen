@@ -66,7 +66,7 @@ function prune(now: number) {
   for (const [key, bucket] of hits) if (bucket.resetAt <= now) hits.delete(key);
 }
 
-export function middleware(req: NextRequest) {
+export function proxy(req: NextRequest) {
   const { pathname } = req.nextUrl;
   const rule = ruleFor(pathname);
   if (!rule) return NextResponse.next();
