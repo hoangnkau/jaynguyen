@@ -144,11 +144,12 @@ export interface UserAuthOperations {
 export interface Project {
   id: number;
   title: string;
+  kind: 'side' | 'engagement';
   /**
    * Lowercase, hyphenated. Becomes /projects/<slug>.
    */
   slug: string;
-  stage: 'live' | 'building' | 'archived';
+  stage: 'live' | 'building' | 'archived' | 'delivered';
   /**
    * Show on the home page.
    */
@@ -162,9 +163,9 @@ export interface Project {
    */
   summary: string;
   /**
-   * Live site, public repo, or channel. Blueprint rule: no card without proof.
+   * Live site, public repo, or channel. Blueprint rule: no side project without proof.
    */
-  proofUrl: string;
+  proofUrl?: string | null;
   repoUrl?: string | null;
   /**
    * Stack chips shown on the card.
@@ -233,6 +234,20 @@ export interface Project {
     };
     [k: string]: unknown;
   } | null;
+  /**
+   * Named, not described. "Bien Hoa City People's Committee", not "a government client".
+   */
+  client?: string | null;
+  /**
+   * e.g. "2015–2017". A range, not "several years ago".
+   */
+  period?: string | null;
+  /**
+   * Must match your timeline for those dates. If you were a technician then, say technician — a title that does not survive the second interview question takes the rest of the page down with it.
+   */
+  roleHeld?: string | null;
+  referenceAvailable?: boolean | null;
+  disclosureChecked?: boolean | null;
   isThirdParty?: boolean | null;
   ownerConsent?: boolean | null;
   updatedAt: string;
@@ -479,6 +494,7 @@ export interface PayloadMigration {
  */
 export interface ProjectsSelect<T extends boolean = true> {
   title?: T;
+  kind?: T;
   slug?: T;
   stage?: T;
   featured?: T;
@@ -494,6 +510,11 @@ export interface ProjectsSelect<T extends boolean = true> {
   built?: T;
   howItWorks?: T;
   learned?: T;
+  client?: T;
+  period?: T;
+  roleHeld?: T;
+  referenceAvailable?: T;
+  disclosureChecked?: T;
   isThirdParty?: T;
   ownerConsent?: T;
   updatedAt?: T;

@@ -135,16 +135,29 @@ async function run() {
     const awaitingConsent = Boolean(p.isThirdParty && !p.ownerConsent);
     const data = {
       ...p,
+      // Everything seeded here is a side project. Client engagements are
+      // entered in the admin, because each one needs a reference and a
+      // disclosure check that only Jay can honestly tick.
+      kind: "side" as const,
       _status: (awaitingConsent ? "draft" : "published") as "draft" | "published",
     };
+
+    /**
+     * `draft` is typed as the literal `true`, not `boolean` — Payload uses it
+     * to pick an overload, and a variable widens to `boolean` and matches
+     * neither. Branching keeps the literal, which is why this is two calls
+     * rather than one with a computed flag.
+     */
     const doc = existing.docs[0]
       ? await payload.update({
           collection: "projects",
           id: existing.docs[0].id,
           data,
-          draft: awaitingConsent,
+          ...(awaitingConsent ? { draft: true as const } : {}),
         })
-      : await payload.create({ collection: "projects", data, draft: awaitingConsent });
+      : awaitingConsent
+        ? await payload.create({ collection: "projects", data, draft: true })
+        : await payload.create({ collection: "projects", data });
     id[p.slug] = (doc as { id: number }).id;
     console.log(
       `  project: ${p.title}${awaitingConsent ? "  [DRAFT — awaiting owner consent]" : ""}`,

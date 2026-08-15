@@ -148,16 +148,33 @@ export async function collectHealthRows(): Promise<Row[]> {
     (p) => (p as { _status?: string })._status === "published",
   );
 
-  const noProof = published.filter(
-    (p) => !/^https?:\/\//.test(String((p as { proofUrl?: string }).proofUrl ?? "")),
-  );
+  /**
+   * Proof means different things for the two kinds of project — a link for a
+   * side project, a named client and dates for an engagement. Checking both
+   * against the URL rule would report every engagement as broken and train
+   * you to ignore the row, which is how a health check dies.
+   */
+  type Proj = {
+    title?: string;
+    kind?: string;
+    proofUrl?: string;
+    client?: string;
+    period?: string;
+  };
+  const noProof = published.filter((p) => {
+    const d = p as Proj;
+    return d.kind === "engagement"
+      ? !d.client?.trim() || !d.period?.trim()
+      : !/^https?:\/\//.test(String(d.proofUrl ?? ""));
+  });
+  const engagementCount = published.filter((p) => (p as Proj).kind === "engagement").length;
   rows.push({
-    label: "Published projects have a proof link",
+    label: "Published projects can be checked",
     ok: noProof.length === 0,
     detail:
       noProof.length === 0
-        ? `${published.length} published, all with a verifiable URL.`
-        : `Missing a usable proofUrl: ${noProof.map((p) => (p as { title?: string }).title).join(", ")}.`,
+        ? `${published.length} published — ${published.length - engagementCount} with a live URL, ${engagementCount} with a named client and dates.`
+        : `Cannot be verified by a reader: ${noProof.map((p) => (p as Proj).title).join(", ")}.`,
   });
 
   const unconsented = published.filter(

@@ -14,8 +14,15 @@ export function FeaturedWork({
   projects: Project[];
   totalCount: number;
 }) {
-  // GUARDRAIL (blueprint §8.1): no card without proof.
-  const featured = projects.filter((p) => p.featured && p.proofUrl);
+  /**
+   * GUARDRAIL (blueprint §8.1): no card without proof — but proof takes two
+   * forms. A side project proves itself with a link; an engagement proves
+   * itself with a named client and a date range. A card missing whichever
+   * applies to it does not render.
+   */
+  const featured = projects.filter((p) =>
+    p.featured && (p.kind === "engagement" ? Boolean(p.client && p.period) : Boolean(p.proofUrl)),
+  );
   if (!featured.length) return null;
 
   return (
@@ -41,6 +48,12 @@ export function FeaturedWork({
                   <h3 className="text-[17px]">{project.title}</h3>
                   <StatusBadge status={project.stage} />
                 </div>
+
+                {project.kind === "engagement" && (
+                  <p className="mb-2 font-mono text-[12px] text-muted">
+                    {project.client} · {project.period}
+                  </p>
+                )}
 
                 <p className="mb-4 flex-1 text-[14.5px] leading-relaxed text-muted">
                   {project.summary}

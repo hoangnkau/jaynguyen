@@ -52,6 +52,13 @@ export default async function ProjectPage({ params }: Params) {
           <StatusBadge status={p.stage} />
         </div>
 
+        {p.kind === "engagement" && (
+          <p className="mb-4 font-mono text-[13px] text-muted">
+            {p.client} · {p.period}
+            {p.roleHeld ? ` · ${p.roleHeld}` : ""}
+          </p>
+        )}
+
         <p className="max-w-[var(--container-prose)] text-[17px] text-muted">{p.summary}</p>
 
         <div className="mt-6 flex flex-wrap items-center gap-3">
@@ -61,14 +68,27 @@ export default async function ProjectPage({ params }: Params) {
         </div>
 
         <div className="mt-6 flex flex-wrap gap-4 border-y border-border py-4 text-[14px]">
-          <Link
-            href={p.proofUrl}
-            target="_blank"
-            rel="noopener noreferrer"
-            className="font-medium text-accent"
-          >
-            Visit the project ↗
-          </Link>
+          {p.kind === "engagement" ? (
+            /**
+             * Saying plainly why there is no link is stronger than leaving a
+             * gap where one should be. A reader who notices the absence and
+             * is not told why fills it in themselves, usually unkindly.
+             */
+            <span className="text-muted">
+              Built for a client — no public URL. References available on request.
+            </span>
+          ) : (
+            p.proofUrl && (
+              <Link
+                href={p.proofUrl}
+                target="_blank"
+                rel="noopener noreferrer"
+                className="font-medium text-accent"
+              >
+                Visit the project ↗
+              </Link>
+            )
+          )}
           {p.repoUrl && (
             <Link
               href={p.repoUrl}

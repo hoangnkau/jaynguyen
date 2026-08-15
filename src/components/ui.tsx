@@ -137,12 +137,14 @@ const badgeStyles = {
   live: "bg-live-soft text-live",
   building: "bg-accent-soft text-accent",
   archived: "border border-border bg-surface-2 text-muted",
+  delivered: "border border-border bg-surface-2 text-muted",
 } as const;
 
 const badgeLabels = {
   live: "Live",
   building: "In build",
   archived: "Archived",
+  delivered: "Delivered",
 } as const;
 
 export function StatusBadge({ status }: { status: keyof typeof badgeStyles }) {
