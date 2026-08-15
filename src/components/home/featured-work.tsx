@@ -1,36 +1,34 @@
 import Link from "next/link";
 import { ArrowRight } from "@/components/icons";
 import {
-  Button,
-  Chip,
-  Container,
-  Eyebrow,
-  Lead,
-  Section,
-  SectionTitle,
-  StatusBadge,
+  Button, Chip, Container, Eyebrow, Lead, Section, SectionTitle, StatusBadge,
 } from "@/components/ui";
-import { projects } from "@/lib/site-config";
+import type { Home, Project } from "@/payload-types";
 
-export function FeaturedWork() {
+export function FeaturedWork({
+  home,
+  projects,
+  totalCount,
+}: {
+  home: Home;
+  projects: Project[];
+  totalCount: number;
+}) {
   // GUARDRAIL (blueprint §8.1): no card without proof.
   const featured = projects.filter((p) => p.featured && p.proofUrl);
-  const total = projects.filter((p) => p.proofUrl).length;
+  if (!featured.length) return null;
 
   return (
     <Section id="work">
       <Container>
         <Eyebrow>Selected work</Eyebrow>
-        <SectionTitle>Things I&apos;ve actually shipped</SectionTitle>
-        <Lead>
-          Honestly labelled: what&apos;s in production, what&apos;s still being built, and one
-          I shut down on purpose.
-        </Lead>
+        <SectionTitle>{home.workTitle}</SectionTitle>
+        <Lead>{home.workLead}</Lead>
 
         <div className="mt-12 grid gap-6 md:grid-cols-2">
           {featured.map((project) => (
             <article
-              key={project.slug}
+              key={project.id}
               className="flex flex-col overflow-hidden rounded-xl border border-border bg-surface transition-all duration-200 hover:-translate-y-0.5 hover:border-accent/45"
             >
               <div className="relative grid h-[170px] place-items-center border-b border-border bg-surface-2 text-xs text-muted">
@@ -41,7 +39,7 @@ export function FeaturedWork() {
               <div className="flex flex-1 flex-col p-6">
                 <div className="mb-2 flex items-center gap-2.5">
                   <h3 className="text-[17px]">{project.title}</h3>
-                  <StatusBadge status={project.status} />
+                  <StatusBadge status={project.stage} />
                 </div>
 
                 <p className="mb-4 flex-1 text-[14.5px] leading-relaxed text-muted">
@@ -50,8 +48,8 @@ export function FeaturedWork() {
 
                 <div className="flex items-center justify-between gap-4">
                   <div className="flex flex-wrap gap-1.5">
-                    {project.tech.map((t) => (
-                      <Chip key={t}>{t}</Chip>
+                    {(project.tech ?? []).map((t, i) => (
+                      <Chip key={i}>{t}</Chip>
                     ))}
                   </div>
                   <Link
@@ -67,10 +65,10 @@ export function FeaturedWork() {
           ))}
         </div>
 
-        {total > featured.length && (
+        {totalCount > featured.length && (
           <div className="mt-8 text-center">
             <Button href="/projects" variant="ghost">
-              See all {total} projects
+              See all {totalCount} projects
               <ArrowRight className="size-4" />
             </Button>
           </div>

@@ -1,30 +1,30 @@
 import { ArrowRight, Download } from "@/components/icons";
 import { Button, Container } from "@/components/ui";
-import { hero, site } from "@/lib/site-config";
+import type { Home, SiteSetting } from "@/payload-types";
 
-export function Hero() {
+export function Hero({ home, settings }: { home: Home; settings: SiteSetting }) {
   return (
     <section className="pb-16 pt-20 sm:pb-20 sm:pt-28">
       <Container>
         <div className="grid items-center gap-12 lg:grid-cols-[1fr_220px]">
           <div>
-            {site.openToWork.enabled && (
+            {settings.openToWorkEnabled && settings.openToWorkPill && (
               <p className="mb-6 inline-flex items-center gap-2 rounded-full border border-border px-3.5 py-1.5 text-[13px] text-muted">
                 <span className="size-[7px] rounded-full bg-live ring-[3px] ring-live-soft" />
-                {site.openToWork.pill}
+                {settings.openToWorkPill}
               </p>
             )}
 
             <h1 className="mb-6 text-[clamp(2.4rem,5.6vw,3.6rem)] tracking-[-0.035em]">
-              {hero.heading}
+              {home.heading}
             </h1>
 
             <p className="mb-4 max-w-[640px] text-[clamp(1.2rem,2.3vw,1.44rem)] font-normal leading-[1.5]">
-              {hero.tagline} —{" "}
-              <span className="font-medium text-accent">{hero.taglineAccent}</span>
+              {home.tagline} —{" "}
+              <span className="font-medium text-accent">{home.taglineAccent}</span>
             </p>
 
-            <p className="mb-8 max-w-[560px] text-base text-muted">{hero.sub}</p>
+            <p className="mb-8 max-w-[560px] text-base text-muted">{home.sub}</p>
 
             <div className="flex flex-wrap gap-3">
               <Button href="#work">

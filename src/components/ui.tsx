@@ -31,6 +31,57 @@ export function Section({
   );
 }
 
+/**
+ * One page shell for every sub-page, so /about, /projects, /cv and /contact
+ * are the same document with different words in it.
+ *
+ *   top padding   112px   (pt-20 sm:pt-28)
+ *   bottom        80px    (+ footer mt-20 = a constant 160px to the footer)
+ *   header        prose width, because a title and a lead are text
+ *   blocks        separated by one rhythm (mt-16), never by section padding,
+ *                 which is what made /about breathe at 160px and /cv at 48px
+ */
+export function Page({ children }: { children: ReactNode }) {
+  return (
+    <div className="pb-20 pt-20 sm:pt-28">
+      <Container>{children}</Container>
+    </div>
+  );
+}
+
+export function PageHeader({
+  eyebrow,
+  title,
+  lead,
+}: {
+  eyebrow: string;
+  title: ReactNode;
+  lead?: ReactNode;
+}) {
+  return (
+    <header className="max-w-[var(--container-prose)]">
+      <Eyebrow>{eyebrow}</Eyebrow>
+      <h1 className="mb-3 text-[clamp(1.9rem,4vw,2.6rem)]">{title}</h1>
+      {lead && <p className="text-[17px] leading-relaxed text-muted">{lead}</p>}
+    </header>
+  );
+}
+
+export function Block({
+  title,
+  children,
+}: {
+  title?: string;
+  children: ReactNode;
+}) {
+  return (
+    <section className="mt-16">
+      {title && <h2 className="mb-6 text-[1.35rem]">{title}</h2>}
+      {children}
+    </section>
+  );
+}
+
 export function Eyebrow({ children }: { children: ReactNode }) {
   return (
     <span className="mb-4 block text-xs font-semibold uppercase tracking-[0.14em] text-accent">

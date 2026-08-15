@@ -1,4 +1,5 @@
 import type { NextConfig } from "next";
+import { withPayload } from "@payloadcms/next/withPayload";
 
 /**
  * Security headers.
@@ -6,16 +7,38 @@ import type { NextConfig } from "next";
  * A portfolio positioned around cyber security is one an interviewer may
  * actually run through securityheaders.com. These take it from a D to an A.
  *
- * CSP note: this policy still allows 'unsafe-inline' for scripts, because
- * Next.js injects inline hydration data. The strict fix is a per-request nonce
- * issued from middleware — that lands in Phase 3 alongside the passkey work,
- * where the middleware exists anyway. Documented rather than silently ignored.
+ * Two policies, deliberately:
+ *
+ *   PUBLIC SITE  — tight. Static pages, no third-party anything.
+ *   /admin, /api — looser, because the Payload admin is a rich React app that
+ *                  needs blob: workers and inline styles. It is also noindex,
+ *                  passkey-gated from Phase 3, and WAF-restricted, so the
+ *                  looser policy is not the only thing protecting it.
+ *
+ * Both still allow 'unsafe-inline' for scripts, because Next.js injects inline
+ * hydration data. The strict fix is a per-request nonce issued from middleware
+ * — that lands in Phase 3 alongside the passkey work, where the middleware
+ * exists anyway. Documented rather than silently ignored.
  */
-const csp = [
+const BLOB = "https://*.public.blob.vercel-storage.com";
+
+/**
+ * React's development build uses eval() to reconstruct call stacks across
+ * environments; its production build never does — React says so itself in the
+ * console error you get without this.
+ *
+ * So 'unsafe-eval' is granted in development only. Loosening the production
+ * policy to silence a development-only warning would be trading the real
+ * protection for the convenience of not seeing a message.
+ */
+const DEV = process.env.NODE_ENV !== "production";
+const evalIfDev = DEV ? " 'unsafe-eval'" : "";
+
+const publicCsp = [
   "default-src 'self'",
-  "script-src 'self' 'unsafe-inline'",
+  `script-src 'self' 'unsafe-inline'${evalIfDev}`,
   "style-src 'self' 'unsafe-inline'",
-  "img-src 'self' data: blob:",
+  `img-src 'self' data: blob: ${BLOB}`,
   "font-src 'self'",
   "connect-src 'self'",
   "frame-ancestors 'none'",
@@ -25,28 +48,86 @@ const csp = [
   "upgrade-insecure-requests",
 ].join("; ");
 
-const securityHeaders = [
-  { key: "Content-Security-Policy", value: csp },
+const adminCsp = [
+  "default-src 'self'",
+  `script-src 'self' 'unsafe-inline'${evalIfDev}`,
+  "style-src 'self' 'unsafe-inline'",
+  `img-src 'self' data: blob: ${BLOB}`,
+  "font-src 'self' data:",
+  `connect-src 'self' blob: ${BLOB}`,
+  "worker-src 'self' blob:",
+  "media-src 'self' blob:",
+  "frame-ancestors 'none'",
+  "base-uri 'self'",
+  "form-action 'self'",
+  "object-src 'none'",
+  "upgrade-insecure-requests",
+].join("; ");
+
+const baseHeaders = [
   { key: "X-Frame-Options", value: "DENY" },
   { key: "X-Content-Type-Options", value: "nosniff" },
   { key: "Referrer-Policy", value: "strict-origin-when-cross-origin" },
   {
     key: "Permissions-Policy",
-    value: "camera=(), microphone=(), geolocation=(), payment=(), usb=()",
+    // publickey-credentials-get is required for passkeys in Phase 3.
+    value:
+      "camera=(), microphone=(), geolocation=(), payment=(), usb=(), publickey-credentials-get=(self)",
   },
   {
     key: "Strict-Transport-Security",
     value: "max-age=63072000; includeSubDomains; preload",
   },
   { key: "Cross-Origin-Opener-Policy", value: "same-origin" },
-  { key: "Cross-Origin-Resource-Policy", value: "same-origin" },
 ];
 
 const nextConfig: NextConfig = {
   poweredByHeader: false,
+  images: {
+    remotePatterns: [
+      { protocol: "https", hostname: "*.public.blob.vercel-storage.com" },
+    ],
+  },
   async headers() {
-    return [{ source: "/:path*", headers: securityHeaders }];
+    return [
+      {
+        // Everything except the admin and the API.
+        source: "/((?!admin|api|auth).*)",
+        headers: [
+          ...baseHeaders,
+          { key: "Content-Security-Policy", value: publicCsp },
+          { key: "Cross-Origin-Resource-Policy", value: "same-origin" },
+        ],
+      },
+      {
+        source: "/admin/:path*",
+        headers: [
+          ...baseHeaders,
+          { key: "Content-Security-Policy", value: adminCsp },
+          // GUARDRAIL (blueprint §8.2): belt and braces with robots.ts.
+          { key: "X-Robots-Tag", value: "noindex, nofollow" },
+        ],
+      },
+      {
+        source: "/api/:path*",
+        headers: [
+          ...baseHeaders,
+          { key: "X-Robots-Tag", value: "noindex, nofollow" },
+        ],
+      },
+      {
+        // WebAuthn endpoints. Same posture as the API: never indexed, and the
+        // Permissions-Policy in baseHeaders grants publickey-credentials-get
+        // to this origin only.
+        source: "/auth/:path*",
+        headers: [
+          ...baseHeaders,
+          { key: "X-Robots-Tag", value: "noindex, nofollow" },
+          { key: "Cache-Control", value: "no-store" },
+        ],
+      },
+    ];
   },
 };
 
-export default nextConfig;
+export default withPayload(nextConfig, { devBundleServerPackages: false });

@@ -80,6 +80,28 @@
 
   html {
     scroll-behavior: smooth;
+
+    /*
+     * Reserve the scrollbar's width on every page, whether or not that page
+     * scrolls.
+     *
+     * Without this, a long page (/about) shows a scrollbar and a short one
+     * (/projects) does not. On Windows and Linux the scrollbar is a real
+     * ~15px column taken out of the viewport, so centred content sits 7-8px
+     * further left on the scrolling page — and navigating between the two
+     * makes the whole layout jump sideways.
+     *
+     * macOS hides this because its overlay scrollbars take no space, which is
+     * exactly why the bug is easy to ship without noticing.
+     */
+    scrollbar-gutter: stable;
+  }
+
+  /* Safari below 18.2 has no scrollbar-gutter; force the track instead. */
+  @supports not (scrollbar-gutter: stable) {
+    html {
+      overflow-y: scroll;
+    }
   }
 
   body {
@@ -104,6 +126,31 @@
 
   p {
     text-wrap: pretty;
+    text-align: justify;
+    /*
+     * Hyphenation is not optional with justified text — it is what stops the
+     * browser stretching word gaps into "rivers" of white running down the
+     * column. It works because <html lang="en-AU"> tells the engine which
+     * dictionary to use.
+     *
+     * Note that justification only affects lines that are not the last line of
+     * a paragraph, so one-line paragraphs (card meta, captions, labels) are
+     * left untouched by this rule.
+     */
+    hyphens: auto;
+    -webkit-hyphens: auto;
+  }
+
+  /*
+   * Below 640px a justified column is too narrow to break well even with
+   * hyphenation: a couple of long words per line is enough to blow the spacing
+   * apart. Ragged-right is the readable choice at that width.
+   */
+  @media (max-width: 639px) {
+    p {
+      text-align: left;
+      hyphens: manual;
+    }
   }
 
   ::selection {

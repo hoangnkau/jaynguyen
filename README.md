@@ -2,7 +2,7 @@
 
 Personal portfolio for Khanh Hoang (Jay) Nguyen — Darwin, NT.
 
-**Status:** Phase 1 complete (skeleton + home page). See `claude/portfolio-blueprint.md` in the Claude project for the full plan.
+The full plan lives in `claude/portfolio-blueprint.md` in the Claude project. This file covers running and operating the site.
 
 ---
 
@@ -11,11 +11,13 @@ Personal portfolio for Khanh Hoang (Jay) Nguyen — Darwin, NT.
 | Layer | Choice |
 | --- | --- |
 | Framework | Next.js 16 (App Router, TypeScript, Turbopack) |
-| Styling | Tailwind CSS v4 — tokens defined in `src/app/globals.css` |
-| Theme | `next-themes`, light default with dark toggle, `data-theme` attribute |
-| Fonts | Inter + JetBrains Mono, **self-hosted** variable woff2 in `src/fonts/` |
-| Hosting | Vercel (free tier) |
-| CMS | Payload 3 + Neon Postgres — **Phase 2, not yet installed** |
+| CMS | Payload 3 at `/admin`, inside this same app |
+| Database | Neon Postgres (Sydney) |
+| Media | Vercel Blob — falls back to local disk when the token is absent |
+| Auth | Passkey / WebAuthn, with password login as break-glass |
+| Styling | Tailwind v4; tokens in `src/app/globals.css` |
+| Fonts | Inter + JetBrains Mono, **self-hosted** in `src/fonts/` |
+| Hosting | Vercel (Hobby) |
 
 ---
 
@@ -23,64 +25,109 @@ Personal portfolio for Khanh Hoang (Jay) Nguyen — Darwin, NT.
 
 ```bash
 npm install
-npm run dev        # http://localhost:3000
-npm run build      # production build — must pass before every deploy
-npx eslint src --max-warnings 0
+vercel env pull .env.local --environment=production   # then set NEXT_PUBLIC_SERVER_URL=http://localhost:3000
+npm run dev            # http://localhost:3000  ·  admin at /admin
 ```
 
----
+| Script | What it does |
+| --- | --- |
+| `npm run build` | Production build. Must pass before every deploy. |
+| `npm run seed` | Loads the starting content into the CMS. Safe to re-run. |
+| `npm run backup` | `pg_dump` into `./backups`, keeps the newest 12. |
+| `npm run generate:types` | Regenerates `src/payload-types.ts` after a schema change. |
+| `npm run generate:importmap` | Regenerates the admin import map after adding a plugin or custom component. |
+| `npx eslint src scripts --max-warnings 0` | Lint. |
 
-## Deploy to Vercel
-
-1. Push this repo to GitHub (**private**).
-2. vercel.com → **Add New → Project** → import the repo. Framework is detected automatically; no build settings to change.
-3. Deploy. You get a `*.vercel.app` URL immediately — use it to review before the domain is attached.
-4. **Project → Settings → Domains:** add `jaynguyen.fyi` and `www.jaynguyen.fyi`. Set `www` to redirect to the apex so there is exactly one canonical host.
-5. Add the DNS records Vercel shows you at the registrar. SSL is issued automatically — confirm HTTPS works before telling anyone the site exists.
-6. **Settings → Environment Variables:** add `NEXT_PUBLIC_SERVER_URL=https://jaynguyen.fyi`.
-7. Add the property in Google Search Console the day the domain resolves.
-
----
-
-## Content — where it lives right now
-
-Everything renders from **`src/lib/site-config.ts`**. That file is temporary: Phase 2 replaces it with Payload globals and collections, and the components stay as they are. To change copy before then, edit that one file.
+**After changing a collection or global, run both generate scripts.** A missing import-map entry produces `PayloadComponent not found in importMap` at runtime, with no build-time warning.
 
 ---
 
-## Guardrails already enforced in code
+## Where the content lives
 
-These come from §8 of the blueprint. They are built in, not written down somewhere to remember:
+Everything the visitor reads comes from Payload, not from the codebase:
+
+- **Pages** → Home, About, CV globals
+- **Content** → Projects, Posts, Tags, Media
+- **Settings** → Site Settings (name, email, socials, SEO defaults, open-to-work banner)
+
+`src/lib/server-url.ts` is the only configuration left in code, because the canonical origin has to be known before the database is reachable.
+
+---
+
+## Guardrails enforced in code
+
+From §8 of the blueprint. These are built in, not written down somewhere to remember:
 
 | Guardrail | Where |
 | --- | --- |
-| Every capability must cite a project that exists, or it does not render | `src/components/home/capabilities.tsx` |
-| Every skill carries a required `evidence` slug — the build fails without one | `src/lib/site-config.ts` (`Capability` type) |
-| Every proof-bar number carries a `justification` (never rendered — it exists to make you pause) | `src/lib/site-config.ts` |
-| No project card without a `proofUrl` | `src/components/home/featured-work.tsx` |
-| Blog nav item and section stay hidden until 3 posts exist | `src/components/nav.tsx`, `blogIsLive` |
-| Third-party work carries `ownerConsent`, default `false` | `src/lib/site-config.ts` (BNB Fabrics) |
-| `/admin` and `/api` disallowed from indexing | `src/app/robots.ts` |
-| No field anywhere for home address, phone, referees, or visa status | by omission, deliberately |
-| Fonts self-hosted — no visitor IP sent to Google | `src/app/layout.tsx` |
-| Secrets cannot be committed | `.githooks/pre-commit` |
+| A capability cannot be saved without an `evidence` project | `src/globals/Home.ts` (required relationship) |
+| A capability whose evidence is gone stops rendering | `src/components/home/capabilities.tsx` |
+| Every proof-bar number carries a `justification` (never rendered — it exists to make you pause) | `src/globals/Home.ts` |
+| No project card without a `proofUrl` | `src/collections/Projects.ts` |
+| Third-party work cannot publish without recorded `ownerConsent` | `src/collections/Projects.ts` |
+| Research posts cannot publish without a York clearance tick | `src/collections/Posts.ts` |
+| Drafts are unreadable by the public — access control, not a missing link | `read` access on Projects/Posts |
+| Public reads never bypass access control | `overrideAccess: false` in `src/lib/queries.ts` |
+| Media cannot be uploaded without real alt text | `src/collections/Media.ts` |
+| The blog stays hidden until three posts are published | `blogIsLive()` |
+| `/admin`, `/api`, `/auth` are never indexed | `src/app/robots.ts` + `X-Robots-Tag` |
+| The whole site stays out of Google until the real domain is attached | `isLiveDomain()` |
+| No field anywhere for home address, phone, referees or visa status | by omission, deliberately |
+| Secrets cannot be committed | `.githooks/pre-commit` (gitleaks) |
 
-**Enable the secret-scanning hook once, on this machine:**
+Enable the secret-scanning hook once per machine:
 
 ```bash
 git config core.hooksPath .githooks
 ```
 
-Then install [gitleaks](https://github.com/gitleaks/gitleaks/releases). The hook fails loudly if gitleaks is missing — a scanner you assume is running but isn't is worse than none at all.
+---
+
+## Authentication
+
+Passkey login sits alongside Payload's email + password, which is **deliberately still enabled**. Turning it off before two authenticators are proven to work is how you lock yourself out.
+
+The order that matters:
+
+1. Sign in with the password
+2. `/admin/account` → **Register a passkey** (laptop) — copy the recovery code onto paper
+3. Register a second passkey (phone)
+4. **Sign out and sign back in with the second one** — registering it is not proof it works
+5. **New recovery code**, store it offline
+6. Only then consider removing the password
+
+**A passkey is bound to a hostname.** One registered on `localhost` will not work on `jaynguyen.fyi`. Register the real ones after the domain is live, then delete the localhost entries.
 
 ---
 
-## Accessibility baseline
+## Backups
 
-Skip-to-content link, semantic landmarks, visible focus rings, `prefers-reduced-motion` respected, no colour-only meaning. Keep it that way: every image added from Phase 2 onward requires alt text at upload.
+```bash
+npm run backup
+```
+
+Needs the PostgreSQL client on PATH (`pg_dump`). Run it monthly.
+
+An untested backup is not a backup. Once, restore one and run the site off it:
+
+```bash
+createdb jaynguyen_restore_test
+psql -d jaynguyen_restore_test -f backups/<file>.sql
+DATABASE_URI=postgresql://localhost/jaynguyen_restore_test npm run dev
+```
 
 ---
 
-## Next: Phase 2
+## Deploy
 
-Install Payload 3, connect Neon Postgres and Cloudflare R2, define the globals and collections listed in blueprint §5, and migrate the contents of `site-config.ts` into the CMS.
+Push to `main`; Vercel builds and deploys. The build reads from Neon, so `DATABASE_URI` must be correct in Vercel — including the `-pooler` host.
+
+Schema changes are pushed from **development only** (`push: process.env.NODE_ENV !== "production"`). A deploy that could alter the schema is a deploy that could destroy data. Run the app locally against the same database once after a schema change, then deploy.
+
+---
+
+## Accessibility
+
+WCAG AA: contrast ratios are documented and measured in `globals.css`, touch targets ≥ 44px, visible focus rings, `prefers-reduced-motion` respected, alt text required at upload.
+
+Paragraph text is justified with `hyphens: auto`, and ragged-right below 640px. Note that WCAG 1.4.8 (level **AAA**, not AA) advises against justified text; this is a deliberate stylistic choice, not an oversight.
