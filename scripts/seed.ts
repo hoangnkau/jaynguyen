@@ -92,15 +92,29 @@ const PROJECTS: SeedProject[] = [
     tech: ["LLM", "Self-hosted", "NLP"],
   },
   {
+    /**
+     * CORRECTION, 16 Aug 2026.
+     *
+     * This entry previously read `stage: "archived"` and described the project
+     * as shut down after the analytics showed bot traffic. That was wrong.
+     * Calcroo is live at calcroo.au, currently on the 2026–27 financial year,
+     * and anyone could have opened it and seen so.
+     *
+     * Worth naming rather than quietly editing: a site whose entire argument
+     * is "every claim here can be checked" published a claim that was false in
+     * the direction of self-criticism. Modesty is not an excuse — an
+     * unverifiable claim is unverifiable whichever way it points, and this one
+     * was refutable in one click.
+     */
     slug: "calcroo",
     title: "Calcroo",
-    stage: "archived",
+    stage: "live",
     order: 40,
     featured: true,
     summary:
-      "Australian finance and utility calculators, built in Next.js. I shut it down after the analytics showed near-zero human traffic. The post-mortem is the useful part.",
-    proofUrl: "https://github.com/hoangnkau",
-    tech: ["Next.js", "SEO"],
+      "Australian tax and pay calculators, plus the paperwork utilities that go with them — income tax, HECS, casual penalty rates, salary sacrifice. Every calculation runs in the browser, so nobody's salary is ever transmitted anywhere.",
+    proofUrl: "https://calcroo.au",
+    tech: ["Next.js", "Client-side compute", "Tax rules"],
   },
   /**
    * Curious Why was removed from the portfolio on 15 Aug 2026 — it is the
@@ -217,15 +231,16 @@ async function run() {
         },
         {
           /**
-           * Was "3", counting Curious Why. That project is no longer on the
-           * site, so a visitor could only verify two — and a number a reader
-           * cannot check is exactly the kind of claim §8.1 exists to stop.
-           * The count follows the evidence, not the other way round.
+           * Was "3" (counting Curious Why), then "2" when that came off the
+           * site. Now "3" again, and for the opposite reason: Calcroo was
+           * listed as archived when it had been live the whole time, so the
+           * count had been understating what a reader could go and check.
+           * The number follows the evidence in both directions.
            */
-          value: "2",
+          value: "3",
           label: "Side projects live and running right now",
           justification:
-            "ptetarget.au and bnbfabrics.com.au — both publicly reachable, both written up as case studies on this site.",
+            "ptetarget.au, bnbfabrics.com.au and calcroo.au — all three publicly reachable, all three written up as case studies on this site.",
         },
       ],
       capabilitiesEyebrow: "What I do",
@@ -274,9 +289,16 @@ async function run() {
           chips: ["LAMP", "Cloudflare", "Remote admin"],
         },
         {
-          title: "Product judgement",
-          body: "I shut Calcroo down once the analytics showed the traffic was bots. Picking a defensible niche, and knowing when to stop, has saved me more time than any framework.",
-          chips: ["Analytics", "Post-mortems"],
+          /**
+           * Replaced the "I shut Calcroo down" card, which described something
+           * that never happened. This says less about me and more about a
+           * decision — which is the better trade, because the decision is one
+           * a reader can verify by opening the site and reading the network
+           * tab.
+           */
+          title: "Privacy by construction",
+          body: "Calcroo works out your take-home pay without your salary ever leaving the browser. Not a policy promise — there is no server to send it to. The cheapest way to protect data is to never collect it.",
+          chips: ["Client-side compute", "Data minimisation"],
         },
         {
           title: "Bilingual delivery",
