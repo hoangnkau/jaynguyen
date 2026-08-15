@@ -23,6 +23,7 @@ import { BoldFeatureClient as BoldFeatureClient_e70f5e05f09f93e00b997edb1ef0c864
 import { ItalicFeatureClient as ItalicFeatureClient_e70f5e05f09f93e00b997edb1ef0c864 } from '@payloadcms/richtext-lexical/client'
 import { PasskeyManage as PasskeyManage_d181c45d5d28a5fc00dcb054c4029451 } from '@/components/admin/passkey-manage'
 import { PasskeyLogin as PasskeyLogin_37c0bd8b92acfb9103c66ad9fb5a362a } from '@/components/admin/passkey-login'
+import { HealthPanel as HealthPanel_ccde447c093475641aff2f2aad6e4bfb } from '@/components/admin/health-panel'
 import { VercelBlobClientUploadHandler as VercelBlobClientUploadHandler_16c82c5e25f430251a3e3ba57219ff4e } from '@payloadcms/storage-vercel-blob/client'
 import { CollectionCards as CollectionCards_f9c02e79a4aed9a3924487c0cd4cafb1 } from '@payloadcms/next/rsc'
 
@@ -53,6 +54,7 @@ export const importMap = {
   "@payloadcms/richtext-lexical/client#ItalicFeatureClient": ItalicFeatureClient_e70f5e05f09f93e00b997edb1ef0c864,
   "@/components/admin/passkey-manage#PasskeyManage": PasskeyManage_d181c45d5d28a5fc00dcb054c4029451,
   "@/components/admin/passkey-login#PasskeyLogin": PasskeyLogin_37c0bd8b92acfb9103c66ad9fb5a362a,
+  "@/components/admin/health-panel#HealthPanel": HealthPanel_ccde447c093475641aff2f2aad6e4bfb,
   "@payloadcms/storage-vercel-blob/client#VercelBlobClientUploadHandler": VercelBlobClientUploadHandler_16c82c5e25f430251a3e3ba57219ff4e,
   "@payloadcms/next/rsc#CollectionCards": CollectionCards_f9c02e79a4aed9a3924487c0cd4cafb1
 }

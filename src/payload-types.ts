@@ -688,6 +688,14 @@ export interface SiteSetting {
         id?: string | null;
       }[]
     | null;
+  /**
+   * Set automatically by `npm run backup`. The health panel flags 35+ days.
+   */
+  lastBackupAt?: string | null;
+  /**
+   * Set this by hand after you have actually restored a dump and run the site off it. The health panel flags 180+ days.
+   */
+  lastRestoreTestAt?: string | null;
   seoTitle: string;
   seoDescription: string;
   ogImage?: (number | null) | Media;
@@ -808,6 +816,10 @@ export interface About {
     | {
         group: string;
         skills: string[];
+        /**
+         * Which published project demonstrates this group? If you cannot name one, the group does not belong on the site.
+         */
+        evidence: number | Project;
         id?: string | null;
       }[]
     | null;
@@ -854,6 +866,8 @@ export interface SiteSettingsSelect<T extends boolean = true> {
         href?: T;
         id?: T;
       };
+  lastBackupAt?: T;
+  lastRestoreTestAt?: T;
   seoTitle?: T;
   seoDescription?: T;
   ogImage?: T;
@@ -946,6 +960,7 @@ export interface AboutSelect<T extends boolean = true> {
     | {
         group?: T;
         skills?: T;
+        evidence?: T;
         id?: T;
       };
   beyondWork?: T;

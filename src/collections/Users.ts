@@ -69,9 +69,15 @@ export const Users: CollectionConfig = {
       },
     },
     /**
-     * Phase 3 replaces password login with passkey/WebAuthn. The credential
-     * records will hang off this collection. Until then this is email +
-     * password, which is why the site must NOT be on the real domain yet.
+     * Passkey/WebAuthn is built and the credential records live in the
+     * `passkeys` collection. Password login remains enabled on purpose — see
+     * the note on `auth.strategies` above.
+     *
+     * A passkey is bound to a hostname: one registered on localhost will not
+     * work on jaynguyen.fyi. Register the real ones on the live domain, prove
+     * the second one by signing in with it, then delete the localhost entries.
+     * The health panel counts them, so "I'll do it later" becomes visible
+     * rather than forgotten.
      */
   ],
 };

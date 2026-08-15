@@ -102,17 +102,17 @@ const PROJECTS: SeedProject[] = [
     proofUrl: "https://github.com/hoangnkau",
     tech: ["Next.js", "SEO"],
   },
-  {
-    slug: "curious-why",
-    title: "Curious Why",
-    stage: "live",
-    order: 50,
-    featured: false,
-    summary:
-      "An AI-assisted content pipeline: script generation, segmented image prompts, render and publish. Less a YouTube channel than a workflow automation problem.",
-    proofUrl: "https://www.youtube.com/@curiouswhychannel",
-    tech: ["Automation", "Gemini"],
-  },
+  /**
+   * Curious Why was removed from the portfolio on 15 Aug 2026 — it is the
+   * weakest of the set for an IT/security reader, and the home page is
+   * stronger showing four things than five.
+   *
+   * It is deleted here rather than left with `featured: false`, because the
+   * seed upserts by slug: leaving it in would quietly recreate the project
+   * every time anyone ran `npm run seed`, and the removal would look like a
+   * bug rather than a decision. The YouTube channel stays in the footer as a
+   * social link.
+   */
 ];
 
 async function run() {
@@ -203,10 +203,16 @@ async function run() {
             "University of York, MSc Computer Science with Cyber Security, 13 Jan 2025 – 10 Jan 2027.",
         },
         {
-          value: "3",
+          /**
+           * Was "3", counting Curious Why. That project is no longer on the
+           * site, so a visitor could only verify two — and a number a reader
+           * cannot check is exactly the kind of claim §8.1 exists to stop.
+           * The count follows the evidence, not the other way round.
+           */
+          value: "2",
           label: "Side projects live and running right now",
           justification:
-            "ptetarget.au, bnbfabrics.com.au, Curious Why — all publicly reachable.",
+            "ptetarget.au and bnbfabrics.com.au — both publicly reachable, both written up as case studies on this site.",
         },
       ],
       capabilitiesEyebrow: "What I do",
@@ -355,6 +361,7 @@ async function run() {
             "VoIP configuration",
             "Diagnostics & repair",
           ],
+          evidence: id["pte-target"],
         },
         {
           group: "Networks & infrastructure",
@@ -365,6 +372,7 @@ async function run() {
             "Windows/Linux server admin",
             "Web hosting & colocation",
           ],
+          evidence: id["pte-target"],
         },
         {
           group: "Security",
@@ -374,6 +382,7 @@ async function run() {
             "Security engineering",
             "ISMS / ISO 27001 internal auditing",
           ],
+          evidence: id["bnb-fabrics"],
         },
         {
           group: "Authentication & access control",
@@ -383,6 +392,7 @@ async function run() {
             "Passkey/WebAuthn implementation",
             "Session and credential handling",
           ],
+          evidence: id["bnb-fabrics"],
         },
         {
           group: "Applied AI",
@@ -392,6 +402,7 @@ async function run() {
             "AI scoring and evaluation pipelines",
             "Cost modelling before committing to an API",
           ],
+          evidence: id["humanize-ai-writing"],
         },
         {
           group: "Finance & data",
@@ -401,6 +412,7 @@ async function run() {
             "Database administration & reporting",
             "SQL / phpMyAdmin",
           ],
+          evidence: id["calcroo"],
         },
       ],
       beyondWork:

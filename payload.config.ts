@@ -52,6 +52,10 @@ export default buildConfig({
     },
     components: {
       afterLogin: ["@/components/admin/passkey-login#PasskeyLogin"],
+      // GUARDRAIL (blueprint §8.3): the checks that go stale over time rather
+      // than at save time, run on every visit to the dashboard so that
+      // noticing them is not an act of memory.
+      beforeDashboard: ["@/components/admin/health-panel#HealthPanel"],
     },
   },
 

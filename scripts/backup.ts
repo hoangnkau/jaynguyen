@@ -21,7 +21,32 @@ import path from "path";
 const KEEP = 12;
 const dir = path.resolve("backups");
 
-function run() {
+/**
+ * Record the successful dump in the CMS so the health panel can see it.
+ *
+ * Deliberately non-fatal: a backup that succeeded but failed to write a date
+ * is still a backup. Losing the dump because the bookkeeping threw would be
+ * the tail wagging the dog.
+ */
+async function stampBackupDate() {
+  try {
+    const { getPayload } = await import("payload");
+    const { default: config } = await import("../payload.config");
+    const payload = await getPayload({ config });
+    await payload.updateGlobal({
+      slug: "site-settings",
+      data: { lastBackupAt: new Date().toISOString() },
+      overrideAccess: true,
+    });
+    console.log("  stamped lastBackupAt in Site Settings");
+  } catch {
+    console.warn(
+      "  (could not stamp the date in the CMS — the dump is fine, set it by hand in Site Settings)",
+    );
+  }
+}
+
+async function run() {
   const uri = process.env.DATABASE_URI;
   if (!uri) {
     console.error("DATABASE_URI is not set.");
@@ -65,6 +90,14 @@ function run() {
   });
 
   console.log(`  ${Math.min(dumps.length, KEEP)} backup(s) retained in ./backups`);
+
+  await stampBackupDate();
 }
 
-run();
+run().then(
+  () => process.exit(0),
+  (err) => {
+    console.error(err);
+    process.exit(1);
+  },
+);

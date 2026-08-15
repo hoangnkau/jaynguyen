@@ -11,14 +11,21 @@ import { withPayload } from "@payloadcms/next/withPayload";
  *
  *   PUBLIC SITE  — tight. Static pages, no third-party anything.
  *   /admin, /api — looser, because the Payload admin is a rich React app that
- *                  needs blob: workers and inline styles. It is also noindex,
- *                  passkey-gated from Phase 3, and WAF-restricted, so the
- *                  looser policy is not the only thing protecting it.
+ *                  needs blob: workers and inline styles. It is also noindex
+ *                  and behind authentication, so the looser policy is not the
+ *                  only thing protecting it.
  *
- * Both still allow 'unsafe-inline' for scripts, because Next.js injects inline
- * hydration data. The strict fix is a per-request nonce issued from middleware
- * — that lands in Phase 3 alongside the passkey work, where the middleware
- * exists anyway. Documented rather than silently ignored.
+ * An earlier version of this comment also claimed the admin was WAF-restricted.
+ * It is not, and saying so was worse than saying nothing: DNS points straight
+ * at Vercel, so no Cloudflare proxy sits in the request path and there is no
+ * geo-rule to enforce. The control that does exist is the rate limiter in
+ * src/middleware.ts. A comment describing a defence you do not have is how you
+ * end up not noticing it is missing.
+ *
+ * Both policies still allow 'unsafe-inline' for scripts, because Next.js
+ * injects inline hydration data. The strict fix is a per-request nonce issued
+ * from middleware. The middleware now exists, so this is finally cheap to do —
+ * it is simply not done yet. Documented rather than silently ignored.
  */
 const BLOB = "https://*.public.blob.vercel-storage.com";
 

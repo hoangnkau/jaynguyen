@@ -1,7 +1,9 @@
 import type { Metadata } from "next";
+import Link from "next/link";
 import { RichText } from "@/components/rich-text";
 import { Block, Page, PageHeader } from "@/components/ui";
 import { getAbout, getSiteSettings } from "@/lib/queries";
+import type { Project } from "@/payload-types";
 
 export async function generateMetadata(): Promise<Metadata> {
   const s = await getSiteSettings();
@@ -14,6 +16,21 @@ export async function generateMetadata(): Promise<Metadata> {
 
 export default async function AboutPage() {
   const about = await getAbout();
+
+  /**
+   * GUARDRAIL (blueprint §8.1), second gate — the same rule the home page
+   * capabilities use.
+   *
+   * The CMS refuses to save a skill group without an evidence project. This
+   * covers the other direction: a project that was published when the group
+   * was written, and has since been unpublished or deleted. Because the read
+   * runs with overrideAccess: false, an evidence project the public cannot see
+   * comes back as a bare ID rather than an object — so an unproven group stops
+   * rendering rather than standing there as an unsupported claim.
+   */
+  const shownSkillGroups = (about.skillGroups ?? []).filter(
+    (g) => typeof g.evidence === "object" && g.evidence !== null,
+  );
 
   return (
     <Page>
@@ -77,23 +94,36 @@ export default async function AboutPage() {
         </Block>
       )}
 
-      {!!about.skillGroups?.length && (
+      {!!shownSkillGroups.length && (
         <Block title="Skills">
+          <p className="mb-8 max-w-[var(--container-prose)] text-[14.5px] text-muted">
+            Each group names the project it is demonstrated by. If I can&rsquo;t point at
+            something you can go and look at, it isn&rsquo;t on this list.
+          </p>
           <div className="grid gap-8 sm:grid-cols-2 lg:grid-cols-3">
-            {about.skillGroups.map((g, i) => (
-              <div key={g.id ?? i}>
-                <h3 className="mb-3 font-mono text-[12px] uppercase tracking-wider text-accent">
-                  {g.group}
-                </h3>
-                <ul className="flex flex-col gap-1.5">
-                  {(g.skills ?? []).map((s, j) => (
-                    <li key={j} className="text-[14.5px] text-muted">
-                      {s}
-                    </li>
-                  ))}
-                </ul>
-              </div>
-            ))}
+            {shownSkillGroups.map((g, i) => {
+              const proof = g.evidence as Project;
+              return (
+                <div key={g.id ?? i}>
+                  <h3 className="mb-3 font-mono text-[12px] uppercase tracking-wider text-accent">
+                    {g.group}
+                  </h3>
+                  <ul className="flex flex-col gap-1.5">
+                    {(g.skills ?? []).map((s, j) => (
+                      <li key={j} className="text-[14.5px] text-muted">
+                        {s}
+                      </li>
+                    ))}
+                  </ul>
+                  <Link
+                    href={`/projects/${proof.slug}`}
+                    className="mt-3 inline-block border-t border-border pt-2.5 text-[13px] text-muted transition-colors hover:text-accent"
+                  >
+                    Demonstrated in <span className="text-fg">{proof.title}</span> &rarr;
+                  </Link>
+                </div>
+              );
+            })}
           </div>
         </Block>
       )}

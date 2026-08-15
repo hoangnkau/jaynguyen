@@ -61,19 +61,30 @@ From §8 of the blueprint. These are built in, not written down somewhere to rem
 | Guardrail | Where |
 | --- | --- |
 | A capability cannot be saved without an `evidence` project | `src/globals/Home.ts` (required relationship) |
-| A capability whose evidence is gone stops rendering | `src/components/home/capabilities.tsx` |
+| A skill group cannot be saved without an `evidence` project | `src/globals/About.ts` (required relationship) |
+| A claim whose evidence is gone stops rendering | `src/components/home/capabilities.tsx`, `src/app/(site)/about/page.tsx` |
 | Every proof-bar number carries a `justification` (never rendered — it exists to make you pause) | `src/globals/Home.ts` |
 | No project card without a `proofUrl` | `src/collections/Projects.ts` |
 | Third-party work cannot publish without recorded `ownerConsent` | `src/collections/Projects.ts` |
 | Research posts cannot publish without a York clearance tick | `src/collections/Posts.ts` |
 | Drafts are unreadable by the public — access control, not a missing link | `read` access on Projects/Posts |
-| Public reads never bypass access control | `overrideAccess: false` in `src/lib/queries.ts` |
+| Public reads never bypass access control — **globals included** | `overrideAccess: false` in `src/lib/queries.ts` |
 | Media cannot be uploaded without real alt text | `src/collections/Media.ts` |
 | The blog stays hidden until three posts are published | `blogIsLive()` |
 | `/admin`, `/api`, `/auth` are never indexed | `src/app/robots.ts` + `X-Robots-Tag` |
 | The whole site stays out of Google until the real domain is attached | `isLiveDomain()` |
+| Auth endpoints are rate-limited | `src/middleware.ts` |
+| The checks that go stale over time are shown at every login | `src/lib/health.ts` → `src/components/admin/health-panel.tsx` |
 | No field anywhere for home address, phone, referees or visa status | by omission, deliberately |
 | Secrets cannot be committed | `.githooks/pre-commit` (gitleaks) |
+
+The `overrideAccess: false` row is worth a sentence, because it was wrong once in a way nothing would have caught. Globals are world-readable, so it looked unnecessary there — but `home.capabilities[].evidence` and `about.skillGroups[].evidence` are *relationships into `projects`*, and a populated relationship inherits the parent read's access. Without it, an unpublished project still populated as a full object, so the "evidence has gone away" filter never fired. The guardrail existed and did nothing.
+
+## Site health
+
+`/admin` opens with a panel that runs the checks which cannot be enforced at save time, because they go bad over time rather than at the moment you press save: passkey count, recovery code present, orphaned claims, consent, CV freshness, blog pulse, alt text, backup age, restore age.
+
+Two of its rows read dates from **Settings → Site Settings → Operations**. `npm run backup` stamps `lastBackupAt` itself; `lastRestoreTestAt` is set by hand, because no script can confirm you actually watched the site run off a restored database — which is the only thing that makes a backup real.
 
 Enable the secret-scanning hook once per machine:
 

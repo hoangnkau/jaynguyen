@@ -37,21 +37,41 @@ async function client() {
  */
 const PUBLIC = { overrideAccess: false } as const;
 
+/**
+ * The globals need it too, and for a reason that is easy to miss.
+ *
+ * Globals are world-readable by design — there is nothing secret in the hero
+ * copy. But `home.capabilities[].evidence` and `about.skillGroups[].evidence`
+ * are RELATIONSHIPS into `projects`, and a populated relationship is fetched
+ * under whatever access the parent read was granted.
+ *
+ * With overrideAccess left at its default of true, an unpublished project
+ * populates as a full object — so the "a claim whose evidence has gone away
+ * stops being shown" filter in capabilities.tsx never fired, because the
+ * evidence always looked present. The guardrail was there, and it was inert.
+ *
+ * With this, an inaccessible relationship comes back as a bare ID instead of
+ * an object, the filter sees it, and the claim disappears from the page. That
+ * is the behaviour the blueprint describes.
+ */
 export const getSiteSettings = cache(
   async (): Promise<SiteSetting> =>
-    (await client()).findGlobal({ slug: "site-settings", depth: 2 }),
+    (await client()).findGlobal({ slug: "site-settings", depth: 2, ...PUBLIC }),
 );
 
 export const getHome = cache(
-  async (): Promise<Home> => (await client()).findGlobal({ slug: "home", depth: 2 }),
+  async (): Promise<Home> =>
+    (await client()).findGlobal({ slug: "home", depth: 2, ...PUBLIC }),
 );
 
 export const getAbout = cache(
-  async (): Promise<About> => (await client()).findGlobal({ slug: "about", depth: 2 }),
+  async (): Promise<About> =>
+    (await client()).findGlobal({ slug: "about", depth: 2, ...PUBLIC }),
 );
 
 export const getCV = cache(
-  async (): Promise<Cv> => (await client()).findGlobal({ slug: "cv", depth: 2 }),
+  async (): Promise<Cv> =>
+    (await client()).findGlobal({ slug: "cv", depth: 2, ...PUBLIC }),
 );
 
 export const getProjects = cache(async (): Promise<Project[]> => {
