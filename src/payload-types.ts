@@ -71,6 +71,7 @@ export interface Config {
     posts: Post;
     tags: Tag;
     media: Media;
+    documents: Document;
     messages: Message;
     users: User;
     passkeys: Passkey;
@@ -85,6 +86,7 @@ export interface Config {
     posts: PostsSelect<false> | PostsSelect<true>;
     tags: TagsSelect<false> | TagsSelect<true>;
     media: MediaSelect<false> | MediaSelect<true>;
+    documents: DocumentsSelect<false> | DocumentsSelect<true>;
     messages: MessagesSelect<false> | MessagesSelect<true>;
     users: UsersSelect<false> | UsersSelect<true>;
     passkeys: PasskeysSelect<false> | PasskeysSelect<true>;
@@ -358,6 +360,30 @@ export interface Post {
   _status?: ('draft' | 'published') | null;
 }
 /**
+ * PDFs offered for download — the CV, and anything like it.
+ *
+ * This interface was referenced by `Config`'s JSON-Schema
+ * via the `definition` "documents".
+ */
+export interface Document {
+  id: number;
+  /**
+   * What this document is, for your own eyes in this list — e.g. 'CV — August 2026'. Not shown to visitors.
+   */
+  label: string;
+  updatedAt: string;
+  createdAt: string;
+  url?: string | null;
+  thumbnailURL?: string | null;
+  filename?: string | null;
+  mimeType?: string | null;
+  filesize?: number | null;
+  width?: number | null;
+  height?: number | null;
+  focalX?: number | null;
+  focalY?: number | null;
+}
+/**
  * Contact form submissions. Recorded here first, emailed second — so a mail outage loses a notification, never a message.
  *
  * This interface was referenced by `Config`'s JSON-Schema
@@ -465,6 +491,10 @@ export interface PayloadLockedDocument {
     | ({
         relationTo: 'media';
         value: number | Media;
+      } | null)
+    | ({
+        relationTo: 'documents';
+        value: number | Document;
       } | null)
     | ({
         relationTo: 'messages';
@@ -633,6 +663,24 @@ export interface MediaSelect<T extends boolean = true> {
               filename?: T;
             };
       };
+}
+/**
+ * This interface was referenced by `Config`'s JSON-Schema
+ * via the `definition` "documents_select".
+ */
+export interface DocumentsSelect<T extends boolean = true> {
+  label?: T;
+  updatedAt?: T;
+  createdAt?: T;
+  url?: T;
+  thumbnailURL?: T;
+  filename?: T;
+  mimeType?: T;
+  filesize?: T;
+  width?: T;
+  height?: T;
+  focalX?: T;
+  focalY?: T;
 }
 /**
  * This interface was referenced by `Config`'s JSON-Schema
@@ -912,7 +960,10 @@ export interface Cv {
    * Three or four sentences, first person. Lead with the thing that is hardest for someone else to claim.
    */
   summary?: string | null;
-  file?: (number | null) | Media;
+  /**
+   * Upload under Content → Documents first, then select it here. Update Last updated in the same edit.
+   */
+  file?: (number | null) | Document;
   /**
    * The admin health panel flags this when it falls behind the rest of the site. A CV that disagrees with the site is worse than no CV.
    */

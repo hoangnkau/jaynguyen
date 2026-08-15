@@ -44,7 +44,21 @@ export const CV: GlobalConfig = {
           "Three or four sentences, first person. Lead with the thing that is hardest for someone else to claim.",
       },
     },
-    { name: "file", type: "upload", relationTo: "media", label: "CV PDF" },
+    {
+      /**
+       * Points at `documents`, not `media`. Media only accepts image/* — see
+       * collections/Documents.ts for why that restriction was kept rather
+       * than widened to let one PDF through.
+       */
+      name: "file",
+      type: "upload",
+      relationTo: "documents",
+      label: "CV PDF",
+      admin: {
+        description:
+          "Upload under Content → Documents first, then select it here. Update Last updated in the same edit.",
+      },
+    },
     {
       name: "lastUpdated",
       type: "date",

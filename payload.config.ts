@@ -7,6 +7,7 @@ import { vercelBlobStorage } from "@payloadcms/storage-vercel-blob";
 import sharp from "sharp";
 import { resolveServerUrl } from "./src/lib/server-url";
 
+import { Documents } from "./src/collections/Documents";
 import { Media } from "./src/collections/Media";
 import { Messages } from "./src/collections/Messages";
 import { Posts } from "./src/collections/Posts";
@@ -34,9 +35,35 @@ const dirname = path.dirname(fileURLToPath(import.meta.url));
 const blobToken = process.env.BLOB_READ_WRITE_TOKEN ?? "";
 const hasBlob = /^vercel_blob_rw_[A-Za-z0-9_]+$/.test(blobToken);
 
-if (!hasBlob && process.env.NODE_ENV === "production") {
+if (!hasBlob) {
+  /**
+   * This used to warn in production only, and that was the wrong way round.
+   *
+   * Production is the one environment where the token is correct, because
+   * Vercel injects the real value itself. Development is where it is wrong —
+   * `vercel env pull` writes the literal string `[SENSITIVE]` for it — and
+   * development was the environment saying nothing at all.
+   *
+   * The cost of that silence is not theoretical. An upload made in this state
+   * lands on local disk and is written into the database with a URL that
+   * resolves on one laptop and nowhere else. Everything looks fine while you
+   * work; the image is broken the moment it is deployed, and by then the
+   * upload feels like settled history rather than the thing to re-check.
+   *
+   * So it warns everywhere now, and says what to do rather than what is wrong.
+   */
+  const detail = blobToken
+    ? `BLOB_READ_WRITE_TOKEN is set but not a real token (got ${JSON.stringify(
+        blobToken.slice(0, 12),
+      )}…). \`vercel env pull\` cannot read Sensitive variables back — it substitutes a placeholder.`
+    : "BLOB_READ_WRITE_TOKEN is not set.";
+
   console.warn(
-    "[payload] BLOB_READ_WRITE_TOKEN missing or malformed — media uploads will use local disk, which is ephemeral on Vercel.",
+    `\n[payload] Media uploads will be written to LOCAL DISK, not Vercel Blob.\n` +
+      `  ${detail}\n` +
+      `  Anything uploaded now exists only on this machine and will be broken in production.\n` +
+      `  Fix: Vercel dashboard → Storage → your Blob store → .env.local tab → copy the real\n` +
+      `  token by hand into .env.local, restart, then re-upload the file.\n`,
   );
 }
 
@@ -61,7 +88,7 @@ export default buildConfig({
   },
 
   editor: lexicalEditor(),
-  collections: [Projects, Posts, Tags, Media, Messages, Users, Passkeys],
+  collections: [Projects, Posts, Tags, Media, Documents, Messages, Users, Passkeys],
   globals: [SiteSettings, Home, About, CV],
 
   db: postgresAdapter({
@@ -74,7 +101,10 @@ export default buildConfig({
   plugins: [
     vercelBlobStorage({
       enabled: hasBlob,
-      collections: { media: true },
+      // Every upload collection must be listed here. One that is missing
+      // writes to local disk instead, which on Vercel is read-only and
+      // ephemeral — the upload appears to work and the file is gone.
+      collections: { media: true, documents: true },
       token: blobToken,
     }),
   ],

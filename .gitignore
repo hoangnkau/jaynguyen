@@ -43,3 +43,18 @@ next-env.d.ts
 
 # database backups — never committed
 /backups
+
+# Scratch area for files that are on this machine on their way somewhere else —
+# a CV PDF waiting to be uploaded through /admin, an export, a screenshot. Not
+# source, not deliverable, and nothing here is needed to build the site.
+/_local
+
+# Locally-uploaded media.
+#
+# When BLOB_READ_WRITE_TOKEN is missing or a placeholder, Payload falls back to
+# writing uploads here. Those files belong to whoever ran the dev server, not
+# to the project: committing them puts binaries in the history, and they would
+# not help in production anyway — Vercel's filesystem is read-only and
+# ephemeral, so a committed image is one Payload cannot serve, update or
+# delete. Real media lives in Vercel Blob.
+/media
