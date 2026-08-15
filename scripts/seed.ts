@@ -307,8 +307,16 @@ async function run() {
         },
       ],
       workTitle: "Things I've actually shipped",
+      /**
+       * The seventh and last place that claimed a project had been shut down.
+       * Same correction as the Calcroo entry above — see the note there.
+       *
+       * The old line got its force from admitting a failure, which is a good
+       * instinct and was the wrong fact. What replaces it has to earn its
+       * credibility somewhere real, so it counts what a reader can open.
+       */
       workLead:
-        "Honestly labelled: what's in production, what's still being built, and one I shut down on purpose.",
+        "Four of them, honestly labelled — three you can open and use right now, one still being built. No mockups, no concepts, nothing that only runs on my machine.",
       currentlyUpdated: "Aug 2026",
       currentlyItems: [
         {
