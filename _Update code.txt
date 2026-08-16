@@ -1,0 +1,9 @@
+cd D:\jaynguyen-fyi
+npm run dev
+
+npm run build
+
+git add -A
+git status
+git commit -m "Per-page background patterns, CMS headshot, blog and case-study coverage"
+git push
