@@ -1,6 +1,7 @@
 import type { Metadata } from "next";
 import Link from "next/link";
 import { ArrowRight } from "@/components/icons";
+import { PagePattern } from "@/components/page-pattern";
 import { Block, Chip, Page, PageHeader, StatusBadge } from "@/components/ui";
 import { getProjects } from "@/lib/queries";
 import type { Project } from "@/payload-types";
@@ -79,37 +80,40 @@ export default async function ProjectsPage() {
   const engagements = projects.filter((p) => p.kind === "engagement");
 
   return (
-    <Page>
-      <PageHeader
-        eyebrow="Projects"
-        title="Everything, not just the highlights"
-        lead="Side projects link to something you can open and check — including the one I shut down. The engagements below were built for clients and have no public front door, so they are dated, named, and I can put you in touch with someone who was there."
-      />
+    <>
+      <PagePattern name="contour" />
+      <Page>
+        <PageHeader
+          eyebrow="Projects"
+          title="Everything, not just the highlights"
+          lead="Side projects link to something you can open and check — including the one I shut down. The engagements below were built for clients and have no public front door, so they are dated, named, and I can put you in touch with someone who was there."
+        />
 
-      {!!side.length && (
-        <Block title="Side projects">
-          <div className="grid gap-6 md:grid-cols-2">
-            {side.map((p) => (
-              <ProjectCard key={p.id} p={p} />
-            ))}
-          </div>
-        </Block>
-      )}
+        {!!side.length && (
+          <Block title="Side projects">
+            <div className="grid gap-6 md:grid-cols-2">
+              {side.map((p) => (
+                <ProjectCard key={p.id} p={p} />
+              ))}
+            </div>
+          </Block>
+        )}
 
-      {!!engagements.length && (
-        <Block title="Client engagements">
-          <p className="mb-6 max-w-[var(--container-prose)] text-[14.5px] text-muted">
-            Infrastructure work for government and corporate clients in Vietnam. Described
-            at the level of the decisions I made — no topology, addressing or device
-            detail, because that part belongs to the client and not on a public page.
-          </p>
-          <div className="grid gap-6 md:grid-cols-2">
-            {engagements.map((p) => (
-              <ProjectCard key={p.id} p={p} />
-            ))}
-          </div>
-        </Block>
-      )}
-    </Page>
+        {!!engagements.length && (
+          <Block title="Client engagements">
+            <p className="mb-6 max-w-[var(--container-prose)] text-[14.5px] text-muted">
+              Infrastructure work for government and corporate clients in Vietnam. Described
+              at the level of the decisions I made — no topology, addressing or device
+              detail, because that part belongs to the client and not on a public page.
+            </p>
+            <div className="grid gap-6 md:grid-cols-2">
+              {engagements.map((p) => (
+                <ProjectCard key={p.id} p={p} />
+              ))}
+            </div>
+          </Block>
+        )}
+      </Page>
+    </>
   );
 }

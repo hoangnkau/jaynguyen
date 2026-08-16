@@ -1,6 +1,7 @@
 import type { Metadata } from "next";
 import Link from "next/link";
 import { notFound } from "next/navigation";
+import { PagePattern } from "@/components/page-pattern";
 import { RichText } from "@/components/rich-text";
 import { Block, Chip, Page, StatusBadge } from "@/components/ui";
 import { getProject, getProjects } from "@/lib/queries";
@@ -39,13 +40,17 @@ export default async function ProjectPage({ params }: Params) {
   ].filter((b) => b.data);
 
   return (
-    <Page>
-      <Link
-        href="/projects"
-        className="mb-8 inline-block text-[13.5px] text-muted hover:text-fg"
-      >
-        ← All projects
-      </Link>
+    <>
+      {/* Same texture as the projects index: a case study is not a different
+          place, it is the same place with one item opened. */}
+      <PagePattern name="contour" />
+      <Page>
+        <Link
+          href="/projects"
+          className="mb-8 inline-block text-[13.5px] text-muted hover:text-fg"
+        >
+          ← All projects
+        </Link>
 
         <div className="mb-3 flex flex-wrap items-center gap-3">
           <h1 className="text-[clamp(1.8rem,4vw,2.6rem)]">{p.title}</h1>
@@ -59,7 +64,9 @@ export default async function ProjectPage({ params }: Params) {
           </p>
         )}
 
-        <p className="max-w-[var(--container-prose)] text-[17px] text-muted">{p.summary}</p>
+        <p className="max-w-[var(--container-prose)] text-[17px] text-muted">
+          {p.summary}
+        </p>
 
         <div className="mt-6 flex flex-wrap items-center gap-3">
           {(p.tech ?? []).map((t, i) => (
@@ -75,7 +82,8 @@ export default async function ProjectPage({ params }: Params) {
              * is not told why fills it in themselves, usually unkindly.
              */
             <span className="text-muted">
-              Built for a client — no public URL. References available on request.
+              Built for a client — no public URL. References available on
+              request.
             </span>
           ) : (
             p.proofUrl && (
@@ -101,17 +109,20 @@ export default async function ProjectPage({ params }: Params) {
           )}
         </div>
 
-      {blocks.length ? (
-        blocks.map((b) => (
-          <Block key={b.title} title={b.title}>
-            <RichText data={b.data} className="text-muted" />
+        {blocks.length ? (
+          blocks.map((b) => (
+            <Block key={b.title} title={b.title}>
+              <RichText data={b.data} className="text-muted" />
+            </Block>
+          ))
+        ) : (
+          <Block>
+            <p className="text-muted">
+              The write-up for this one is still to come.
+            </p>
           </Block>
-        ))
-      ) : (
-        <Block>
-          <p className="text-muted">The write-up for this one is still to come.</p>
-        </Block>
-      )}
-    </Page>
+        )}
+      </Page>
+    </>
   );
 }

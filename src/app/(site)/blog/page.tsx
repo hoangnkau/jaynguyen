@@ -4,6 +4,7 @@ import { notFound } from "next/navigation";
 import { Page, PageHeader } from "@/components/ui";
 import { blogIsLive, getPosts, MIN_POSTS_TO_SHOW_BLOG } from "@/lib/queries";
 import type { Post, Tag } from "@/payload-types";
+import { PagePattern } from "@/components/page-pattern";
 
 export const metadata: Metadata = {
   title: "Writing",
@@ -44,61 +45,64 @@ export default async function BlogIndexPage() {
   const posts = await getPosts();
 
   return (
-    <Page>
-      <PageHeader
-        eyebrow="Writing"
-        title="Notes from the build"
-        lead={`Working notes on the things this site is made of — authentication, self-hosted infrastructure, and the occasional decision to stop. Published when there is something worth saying, which is why there are ${posts.length} and not ${posts.length * 10}.`}
-      />
+    <>
+      <PagePattern name="rules" />
+      <Page>
+        <PageHeader
+          eyebrow="Writing"
+          title="Notes from the build"
+          lead={`Working notes on the things this site is made of — authentication, self-hosted infrastructure, and the occasional decision to stop. Published when there is something worth saying, which is why there are ${posts.length} and not ${posts.length * 10}.`}
+        />
 
-      <ol className="mt-16 border-t border-border">
-        {posts.map((post) => (
-          <li key={post.id} className="border-b border-border">
-            <Link
-              href={`/blog/${post.slug}`}
-              className="group grid gap-2 py-7 sm:grid-cols-[170px_1fr]"
-            >
-              <time
-                dateTime={post.publishedAt}
-                className="font-mono text-[13px] text-muted"
+        <ol className="mt-16 border-t border-border">
+          {posts.map((post) => (
+            <li key={post.id} className="border-b border-border">
+              <Link
+                href={`/blog/${post.slug}`}
+                className="group grid gap-2 py-7 sm:grid-cols-[170px_1fr]"
               >
-                {formatDate(post.publishedAt)}
-              </time>
+                <time
+                  dateTime={post.publishedAt}
+                  className="font-mono text-[13px] text-muted"
+                >
+                  {formatDate(post.publishedAt)}
+                </time>
 
-              <div>
-                <h2 className="mb-1.5 text-[19px] transition-colors group-hover:text-accent">
-                  {post.title}
-                </h2>
-                <p className="mb-3 text-[14.5px] leading-relaxed text-muted">
-                  {post.summary}
-                </p>
-                {!!tagNames(post).length && (
-                  <ul className="flex flex-wrap gap-1.5">
-                    {tagNames(post).map((name) => (
-                      <li
-                        key={name}
-                        className="rounded-md border border-border bg-surface-2 px-2.5 py-0.5 font-mono text-[11.5px] text-muted"
-                      >
-                        {name}
-                      </li>
-                    ))}
-                  </ul>
-                )}
-              </div>
-            </Link>
-          </li>
-        ))}
-      </ol>
+                <div>
+                  <h2 className="mb-1.5 text-[19px] transition-colors group-hover:text-accent">
+                    {post.title}
+                  </h2>
+                  <p className="mb-3 text-[14.5px] leading-relaxed text-muted">
+                    {post.summary}
+                  </p>
+                  {!!tagNames(post).length && (
+                    <ul className="flex flex-wrap gap-1.5">
+                      {tagNames(post).map((name) => (
+                        <li
+                          key={name}
+                          className="rounded-md border border-border bg-surface-2 px-2.5 py-0.5 font-mono text-[11.5px] text-muted"
+                        >
+                          {name}
+                        </li>
+                      ))}
+                    </ul>
+                  )}
+                </div>
+              </Link>
+            </li>
+          ))}
+        </ol>
 
-      {/*
-        * A count, stated rather than implied. The blueprint's threshold is a
-        * decision this site is willing to explain; a reader who knows the rule
-        * reads three posts as a start, not as neglect.
-        */}
-      <p className="mt-10 text-[13.5px] text-muted">
-        This page appears once {MIN_POSTS_TO_SHOW_BLOG} posts are published — no
-        placeholder posts, no &ldquo;coming soon&rdquo;.
-      </p>
-    </Page>
+        {/*
+         * A count, stated rather than implied. The blueprint's threshold is a
+         * decision this site is willing to explain; a reader who knows the rule
+         * reads three posts as a start, not as neglect.
+         */}
+        <p className="mt-10 text-[13.5px] text-muted">
+          This page appears once {MIN_POSTS_TO_SHOW_BLOG} posts are published —
+          no placeholder posts, no &ldquo;coming soon&rdquo;.
+        </p>
+      </Page>
+    </>
   );
 }

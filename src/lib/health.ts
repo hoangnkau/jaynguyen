@@ -48,9 +48,16 @@ const daysSince = (d: string | null | undefined) =>
  */
 const isVisible = (v: unknown) => typeof v === "object" && v !== null;
 
-type Evidenced = { evidence?: unknown; title?: string | null; group?: string | null };
+type Evidenced = {
+  evidence?: unknown;
+  title?: string | null;
+  group?: string | null;
+};
 
-function orphans(rows: Evidenced[] | null | undefined, name: (r: Evidenced) => string) {
+function orphans(
+  rows: Evidenced[] | null | undefined,
+  name: (r: Evidenced) => string,
+) {
   return (rows ?? []).filter((r) => !isVisible(r.evidence)).map(name);
 }
 
@@ -68,31 +75,56 @@ export async function collectHealthRows(): Promise<Row[]> {
   // judges is what a visitor actually gets — not what the database holds.
   const PUBLIC = { overrideAccess: false } as const;
 
-  const [settings, home, about, cv, projects, posts, media, passkeys, users, messages] =
-    await Promise.all([
-      payload.findGlobal({ slug: "site-settings", depth: 0 }),
-      payload.findGlobal({ slug: "home", depth: 2, ...PUBLIC }),
-      payload.findGlobal({ slug: "about", depth: 2, ...PUBLIC }),
-      payload.findGlobal({ slug: "cv", depth: 0 }),
-      payload.find({ collection: "projects", limit: 200, depth: 0, overrideAccess: true }),
-      payload.find({
-        collection: "posts",
-        limit: 200,
-        depth: 0,
-        sort: "-publishedAt",
-        overrideAccess: true,
-      }),
-      payload.find({ collection: "media", limit: 500, depth: 0, overrideAccess: true }),
-      payload.count({ collection: "passkeys", overrideAccess: true }),
-      payload.find({ collection: "users", limit: 10, depth: 0, overrideAccess: true }),
-      payload.find({
-        collection: "messages",
-        limit: 200,
-        depth: 0,
-        sort: "-createdAt",
-        overrideAccess: true,
-      }),
-    ]);
+  const [
+    settings,
+    home,
+    about,
+    cv,
+    projects,
+    posts,
+    media,
+    passkeys,
+    users,
+    messages,
+  ] = await Promise.all([
+    payload.findGlobal({ slug: "site-settings", depth: 0 }),
+    payload.findGlobal({ slug: "home", depth: 2, ...PUBLIC }),
+    payload.findGlobal({ slug: "about", depth: 2, ...PUBLIC }),
+    payload.findGlobal({ slug: "cv", depth: 0 }),
+    payload.find({
+      collection: "projects",
+      limit: 200,
+      depth: 0,
+      overrideAccess: true,
+    }),
+    payload.find({
+      collection: "posts",
+      limit: 200,
+      depth: 0,
+      sort: "-publishedAt",
+      overrideAccess: true,
+    }),
+    payload.find({
+      collection: "media",
+      limit: 500,
+      depth: 0,
+      overrideAccess: true,
+    }),
+    payload.count({ collection: "passkeys", overrideAccess: true }),
+    payload.find({
+      collection: "users",
+      limit: 10,
+      depth: 0,
+      overrideAccess: true,
+    }),
+    payload.find({
+      collection: "messages",
+      limit: 200,
+      depth: 0,
+      sort: "-createdAt",
+      overrideAccess: true,
+    }),
+  ]);
 
   const rows: Row[] = [];
 
@@ -174,7 +206,9 @@ export async function collectHealthRows(): Promise<Row[]> {
       ? !d.client?.trim() || !d.period?.trim()
       : !/^https?:\/\//.test(String(d.proofUrl ?? ""));
   });
-  const engagementCount = published.filter((p) => (p as Proj).kind === "engagement").length;
+  const engagementCount = published.filter(
+    (p) => (p as Proj).kind === "engagement",
+  ).length;
   rows.push({
     label: "Published projects can be checked",
     ok: noProof.length === 0,
@@ -226,7 +260,9 @@ export async function collectHealthRows(): Promise<Row[]> {
    * for "the argument is still there", but it is a proxy that survives.
    */
   const cvCopy = cv as { headline?: string | null; summary?: string | null };
-  const hasArgument = Boolean(cvCopy.headline?.trim() && cvCopy.summary?.trim());
+  const hasArgument = Boolean(
+    cvCopy.headline?.trim() && cvCopy.summary?.trim(),
+  );
   rows.push({
     label: "CV states a position",
     ok: hasArgument,
@@ -269,7 +305,31 @@ export async function collectHealthRows(): Promise<Row[]> {
         : `Last post ${lastPostDays} days ago. A blog that stops damages credibility more than no blog.`,
   });
 
-  const noAlt = media.docs.filter((m) => !String((m as { alt?: string }).alt ?? "").trim());
+  /**
+   * The headshot renders only when the relationship is populated AND the
+   * media record carries alt text. Both of those fail QUIETLY — the pages
+   * simply fall back to the placeholder, which looks identical to "no
+   * photo uploaded yet".
+   *
+   * That silence is the bug. Uploading a file into the Media collection
+   * feels like publishing it, and it is not: nothing appears on the site
+   * until the image is also selected HERE, in Site Settings. Without this
+   * row the only symptom is a photo that mysteriously does not show, which
+   * is precisely the kind of thing §8.3 exists to make visible.
+   */
+  const shot = (settings as { headshot?: unknown }).headshot;
+  const shotSet = shot !== null && shot !== undefined;
+  rows.push({
+    label: "Headshot",
+    ok: shotSet,
+    detail: shotSet
+      ? "Set in Site Settings and rendering on the home page and /about."
+      : "Not set. Uploading to Media is not enough — open Site Settings and choose the image in the Headshot field.",
+  });
+
+  const noAlt = media.docs.filter(
+    (m) => !String((m as { alt?: string }).alt ?? "").trim(),
+  );
   rows.push({
     label: "Every image has alt text",
     ok: noAlt.length === 0,
@@ -291,7 +351,11 @@ export async function collectHealthRows(): Promise<Row[]> {
    * without this row, a broken RESEND_API_KEY looks exactly like nobody having
    * written to you.
    */
-  type Msg = { handled?: boolean; deliveredByEmail?: boolean; createdAt?: string };
+  type Msg = {
+    handled?: boolean;
+    deliveredByEmail?: boolean;
+    createdAt?: string;
+  };
   const msgs = messages.docs as Msg[];
 
   const waiting = msgs.filter((m) => !m.handled);
@@ -323,7 +387,10 @@ export async function collectHealthRows(): Promise<Row[]> {
 
   /* --------------------------------------------------------- operations -- */
 
-  const ops = settings as { lastBackupAt?: string | null; lastRestoreTestAt?: string | null };
+  const ops = settings as {
+    lastBackupAt?: string | null;
+    lastRestoreTestAt?: string | null;
+  };
   const backupDays = daysSince(ops.lastBackupAt);
   rows.push({
     label: "Database backup",

@@ -37,6 +37,24 @@
   --live: #146b34;
   --live-soft: rgb(20 107 52 / 0.12);
   --on-accent: #ffffff;
+
+  /*
+   * Background pattern ink — see the pattern system below.
+   *
+   * 0.05 is not a taste decision, it is the measured ceiling. The pattern
+   * darkens whatever sits under it, so it eats contrast, and accent-coloured
+   * text is the first thing to fail:
+   *
+   *   #b8451f on #fafaf9        flat  5.14
+   *   ... with 7.8% black over it     4.30   <- below WCAG AA
+   *   ... with 6.0%                   4.50   <- exactly on the line
+   *   ... with 5.0%                   4.63   <- real margin
+   *
+   * 7.8% was fine when the pattern lived only behind the hero, where no
+   * accent text sits. Full-page, it is not. Same pattern, different ceiling,
+   * because the question changed.
+   */
+  --pattern-ink: 0.05;
 }
 
 [data-theme="dark"] {
@@ -51,6 +69,8 @@
   --live: #3fb950;
   --live-soft: rgb(63 185 80 / 0.14);
   --on-accent: #1b1207;
+
+  --pattern-ink: 0.05;
 }
 
 @theme inline {
@@ -162,6 +182,154 @@
     outline: 2px solid var(--accent);
     outline-offset: 3px;
     border-radius: 4px;
+  }
+}
+
+/* ---------------------------------------------------------------
+   Page background patterns — one per page, all from the same system.
+
+   WHY A PATTERN AT ALL, AND WHY NOT THE OBVIOUS ONE
+
+   The default "technology" background is glowing nodes joined by curves.
+   On a site whose entire premise is that a claim must name the project that
+   proves it, a neural-network motif would be the one element with nothing
+   behind it — and it is exactly the element a sceptical reader notices.
+   Binary rain and floating hexagons fail the same test: they reference an
+   aesthetic rather than the work. Everything below is drawn from something
+   Jay has actually built.
+
+   WHY ONE PER PAGE
+
+   A single texture site-wide is wallpaper. A different one per page gives
+   each page its own character while the grammar stays constant — same ink,
+   same geometry, same restraint — so it reads as a system rather than as
+   five decisions.
+
+     /                 circuit traces   hardware: where the work starts
+     /about            drafting grid    a life laid out and measured
+     /projects         signal contours  things running, traffic moving
+     /projects/[slug]  signal contours  same section, one item opened
+     /cv               dot matrix       a printed document
+     /contact          broadcast rings  a signal going out
+
+     /blog             ruled lines      manuscript paper: where writing happens
+     /blog/[slug]      ruled lines      same section, one item opened
+
+   THE THREE CONSTRAINTS
+
+   1. Ink is capped at 5% and that number is measured, not chosen — see the
+      --pattern-ink comment above. Automated checks CANNOT police this:
+      Lighthouse computes contrast between the text colour and the DECLARED
+      background colour and never sees what is drawn in between. It scores
+      100 either way, so a green score is no evidence at all here.
+   2. Content surfaces stay opaque. Cards and panels use --surface, so the
+      densest reading on the site is always done on flat colour.
+   3. No request, no motion. CSS gradients and two inline SVG data URIs,
+      both covered by the existing `img-src 'self' data:`.
+
+   The layer is position: fixed, so it does not scroll, does not tile
+   visibly down a long page, and costs one paint rather than one per
+   screenful.
+   --------------------------------------------------------------- */
+body {
+  position: relative;
+}
+
+body::before {
+  content: "";
+  position: fixed;
+  inset: 0;
+  z-index: -1;
+  pointer-events: none;
+  opacity: var(--pattern-ink);
+  background-repeat: repeat;
+}
+
+/*
+ * Every tile is drawn in black and inverted for dark mode. One source per
+ * pattern rather than a hand-coloured pair, which would drift apart the
+ * first time anyone edited a line.
+ */
+[data-theme="dark"] body::before {
+  filter: invert(1);
+}
+
+/* Pages declare their pattern with a marker element; see components/page-pattern.tsx. */
+
+/* / — circuit traces. Every turn is 90 or 45 degrees, every junction has a
+   via, because that is how a real board is laid out. */
+body:has([data-pattern="circuit"])::before {
+  background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='200' height='200' viewBox='0 0 200 200'%3E%3Cg fill='none' stroke='%23000' stroke-width='1.4'%3E%3Cpath d='M0 40h58l22-22h64l24 24h32'/%3E%3Cpath d='M0 120h34l26 26v34l18 18h60'/%3E%3Cpath d='M200 88h-46l-20 20H92l-18-18V44'/%3E%3Cpath d='M40 200v-38l24-24h52'/%3E%3Cpath d='M148 200v-52l30-30'/%3E%3C/g%3E%3Cg fill='%23000'%3E%3Ccircle cx='58' cy='40' r='3.2'/%3E%3Ccircle cx='144' cy='18' r='3.2'/%3E%3Ccircle cx='60' cy='146' r='3.2'/%3E%3Ccircle cx='134' cy='108' r='3.2'/%3E%3Ccircle cx='74' cy='44' r='3.2'/%3E%3Ccircle cx='178' cy='118' r='3.2'/%3E%3C/g%3E%3C/svg%3E");
+  background-size: 340px 340px;
+}
+
+/* /about — drafting grid. Two weights: one weight reads as graph paper,
+   two read as a drawing sheet. */
+body:has([data-pattern="grid"])::before {
+  background-image:
+    linear-gradient(rgb(0 0 0 / 0.45) 1px, transparent 1px),
+    linear-gradient(90deg, rgb(0 0 0 / 0.45) 1px, transparent 1px),
+    linear-gradient(rgb(0 0 0 / 0.9) 1px, transparent 1px),
+    linear-gradient(90deg, rgb(0 0 0 / 0.9) 1px, transparent 1px);
+  background-size:
+    34px 34px,
+    34px 34px,
+    170px 170px,
+    170px 170px;
+}
+
+/* /projects — signal contours. Reads as both network traffic and the audio
+   processing from the meeting-room work. */
+body:has([data-pattern="contour"])::before {
+  background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='600' height='200' viewBox='0 0 600 200'%3E%3Cg fill='none' stroke='%23000' stroke-width='1.2'%3E%3Cpath d='M0 100c50-60 100-60 150 0s100 60 150 0 100-60 150 0 100 60 150 0'/%3E%3Cpath d='M0 100c50-34 100-34 150 0s100 34 150 0 100-34 150 0 100 34 150 0' opacity='.75'/%3E%3Cpath d='M0 100c50-88 100-88 150 0s100 88 150 0 100-88 150 0 100 88 150 0' opacity='.5'/%3E%3Cpath d='M0 100c50-16 100-16 150 0s100 16 150 0 100-16 150 0 100 16 150 0' opacity='.6'/%3E%3C/g%3E%3C/svg%3E");
+  background-size: 780px 260px;
+}
+
+/* /cv — dot matrix. A printed sheet, a rack face, a punched card. */
+body:has([data-pattern="dots"])::before {
+  background-image: radial-gradient(#000 1.1px, transparent 1.1px);
+  background-size: 22px 22px;
+}
+
+/* /contact — broadcast rings, from the top right. A signal going out. */
+body:has([data-pattern="rings"])::before {
+  background-image: repeating-radial-gradient(
+    circle at 88% 6%,
+    transparent 0 57px,
+    rgb(0 0 0 / 0.85) 57px 58px
+  );
+}
+
+/* /blog — ruled lines. Manuscript paper: the surface writing happens on.
+   This slot held a field of hex and RFC 5737 addresses first, and it had to
+   go. It was legible, and legible text in a background is a different class
+   of problem from a legible line — the eye tries to READ it, so it competes
+   with the article no matter how far the contrast is dropped. Lowering the
+   ink to 2.25% made it quieter and did not make it stop asking to be read.
+   Rules carry the same idea and ask nothing. */
+body:has([data-pattern="rules"])::before {
+  background-image: linear-gradient(
+    to bottom,
+    transparent 0 33px,
+    rgb(0 0 0 / 0.85) 33px 34px
+  );
+  background-size: 100% 34px;
+}
+
+/*
+ * Someone who has asked their operating system for more contrast, or who is
+ * in a forced-colours mode, has told us plainly that decoration is not
+ * welcome. Honouring that costs two rules.
+ */
+@media (prefers-contrast: more), (forced-colors: active) {
+  body::before {
+    display: none;
+  }
+}
+
+@media print {
+  body::before {
+    display: none;
   }
 }
 

@@ -19,6 +19,25 @@ export const SiteSettings: GlobalConfig = {
     { name: "location", type: "text", required: true },
     { name: "email", type: "email", required: true },
     {
+      /**
+       * The headshot. Optional on purpose — the pages fall back to a marked
+       * placeholder rather than collapsing, so an empty CMS never produces a
+       * broken layout.
+       *
+       * It lives here rather than in `public/` because a photograph is
+       * content, not code: swapping it should not need a deploy, and the
+       * Media collection already forces alt text at upload, which is the one
+       * accessibility rule a portrait most often breaks.
+       */
+      name: "headshot",
+      type: "upload",
+      relationTo: "media",
+      admin: {
+        description:
+          "Square, at least 440×440 so it stays sharp on a high-density screen. Neutral background.",
+      },
+    },
+    {
       type: "collapsible",
       label: "Open to work banner",
       fields: [

@@ -792,6 +792,10 @@ export interface SiteSetting {
   domain: string;
   location: string;
   email: string;
+  /**
+   * Square, at least 440×440 so it stays sharp on a high-density screen. Neutral background.
+   */
+  headshot?: (number | null) | Media;
   openToWorkEnabled?: boolean | null;
   openToWorkPill?: string | null;
   openToWorkHeading?: string | null;
@@ -985,6 +989,7 @@ export interface SiteSettingsSelect<T extends boolean = true> {
   domain?: T;
   location?: T;
   email?: T;
+  headshot?: T;
   openToWorkEnabled?: T;
   openToWorkPill?: T;
   openToWorkHeading?: T;
